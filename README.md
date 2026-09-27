@@ -4,6 +4,10 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
+![Executive Overview page: KPI cards, net sales vs budget by month, sales by category and store country, and a category matrix comparing current and prior year](docs/images/executive-overview.png)
+
+*Executive Overview on the 100K-order dataset (2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
+
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
@@ -96,7 +100,7 @@ Key design decisions:
 | `check_model_contract.py` | a dbt column renamed or retyped without updating the Power BI model | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
-| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, invalid theme, visuals bound to fields that no longer exist | CI, `check` |
+| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
 

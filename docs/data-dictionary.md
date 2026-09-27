@@ -276,6 +276,7 @@ RETURN
 |---|---|---|
 | **Products Sold** | Distinct products with at least one sale in the selected period. | `#,0` |
 | **Sales Mix %** | Share of Sales Amount across the products selected outside the visual (slicers and cross-filters still apply), e.g. each price band's slice of sales. A visual's rows add up to 100%. | `0.0%` |
+| **Subcategory Sales Rank** | Where the product in context ranks by Sales Amount among the products of its subcategory that sold in the selected period, e.g. "#3 of 45". BLANK unless exactly one product with sales is in context. |  |
 
 <details><summary>DAX: Products Sold</summary>
 
@@ -293,11 +294,36 @@ DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) )
 
 </details>
 
+<details><summary>DAX: Subcategory Sales Rank</summary>
+
+```dax
+VAR _Product = SELECTEDVALUE ( 'Product'[Product Name] )
+VAR _Subcategory = SELECTEDVALUE ( 'Product'[Subcategory] )
+VAR _SellingPeers =
+    FILTER (
+        CALCULATETABLE (
+            VALUES ( 'Product'[Product Name] ),
+            REMOVEFILTERS ( 'Product' ),
+            'Product'[Subcategory] = _Subcategory
+        ),
+        NOT ISBLANK ( [Sales Amount] )
+    )
+RETURN
+    IF (
+        NOT ISBLANK ( _Product ) && NOT ISBLANK ( [Sales Amount] ),
+        "#" & RANKX ( _SellingPeers, [Sales Amount] ) & " of " & COUNTROWS ( _SellingPeers )
+    )
+```
+
+</details>
+
 ### Report Helpers
 
 | Measure | Description | Format |
 |---|---|---|
 | **Budget Variance Color** | Bar colour for budget variance, from the theme's diverging pair: blue at or above budget, red below. Bound to a visual's fill as a field value, so the colour always matches the sign. |  |
+| **Selected Product** | Header of the Product Detail drill-through page: the product in context, or a hint when there isn't exactly one. |  |
+| **Selected Product Details** | Subheader of the Product Detail page, e.g. "Contoso · Computers › Laptops · $500-999 · list price $899.00 · standard cost $412.34". BLANK unless exactly one product is in context. |  |
 | **Data Freshness** | Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters. |  |
 | **Selected Time Calculation Suffix** | " (YTD)"-style suffix naming the selected Time Intelligence item; BLANK for Current. |  |
 | **Selected Metric Label** | Name of the metric picked in the Metric Selector field parameter plus the time calculation, e.g. "Margin % (YTD)". Used for dynamic visual titles. |  |
@@ -310,6 +336,29 @@ DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) )
 
 ```dax
 IF ( [Sales vs Budget] < 0, "#E34948", "#2A78D6" )
+```
+
+</details>
+
+<details><summary>DAX: Selected Product</summary>
+
+```dax
+SELECTEDVALUE ( 'Product'[Product Name], "Right-click a product and choose Drill through > Product Detail" )
+```
+
+</details>
+
+<details><summary>DAX: Selected Product Details</summary>
+
+```dax
+IF (
+    HASONEVALUE ( 'Product'[Product Name] ),
+    SELECTEDVALUE ( 'Product'[Brand] ) & "  ·  "
+        & SELECTEDVALUE ( 'Product'[Category] ) & " › " & SELECTEDVALUE ( 'Product'[Subcategory] ) & "  ·  "
+        & SELECTEDVALUE ( 'Product'[Price Band] ) & "  ·  list price "
+        & FORMAT ( SELECTEDVALUE ( 'Product'[List Price] ), "$#,0.00" ) & "  ·  standard cost "
+        & FORMAT ( SELECTEDVALUE ( 'Product'[Standard Cost] ), "$#,0.00" )
+)
 ```
 
 </details>

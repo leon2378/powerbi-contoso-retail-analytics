@@ -1,6 +1,6 @@
 # Contoso Retail Analytics: end-to-end Power BI
 
-An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a six-page report, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
+An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a six-page report with a product drill-through, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
@@ -13,7 +13,7 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²) and a budget variance waterfall and heatmap |
+| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, and a product drill-through page |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
@@ -27,6 +27,7 @@ All pages share one header: Year, Country and Channel slicers that stay in sync 
 - **Products.** What sells, at what price and margin? KPI cards (Sales Amount, Margin, Margin %, Avg Selling Price, Products Sold), sales vs margin % for each of the 32 subcategories (sales on a log scale), the top 10 products by sales and a price band summary showing each band's share of sales and margin. A Category slicer in the header narrows every visual, e.g. to see how one category's sales split across price bands.
 - **Stores & Channels.** Where do we sell? KPI cards (Sales Amount, Online Sales %, Open Stores, Sales per Store, Sales per m²), online vs physical sales by month (online overtook physical stores in 2023), physical store sales by country with drill-down to state, a table of physical stores with their open and close dates, and sales per m² of store space by country. Physical-store visuals are orange, matching the Physical colour on every page. To test row-level security, use *Modeling → View as* with the Regional Manager role and a user from `rls_user_access.csv` (e.g. `emea.manager@contoso.example`).
 - **Budget Variance.** Where are we off plan? KPI cards (sales and budget over the same months, variance, variance % and how many categories are below budget), a waterfall of the variance by category, variance % by store country and a category × year heatmap that drills down to months. Blue is above budget and red below (the theme's diverging pair), and every value carries a + or − sign, so colour never carries the meaning alone.
+- **Product Detail** (drill-through). Right-click any product, e.g. in the Products page's top 10, and choose *Drill through → Product Detail*. The header names the product with its brand, category, price band, list price and cost, then shows sales, units, average selling price, margin %, customers and its rank in its subcategory, plus a monthly trend, price, volume and margin by year, customers by age band and gender, and sales by channel. Filters from the source page carry over, and the back button returns to it. Browsed directly, the page opens on the top seller.
 
 ![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
 
@@ -45,6 +46,10 @@ All pages share one header: Year, Country and Channel slicers that stay in sync 
 ![Budget Variance page: KPI cards, a waterfall of the variance to budget by category, sales vs budget % by store country and a category by year heatmap of sales vs budget %](docs/images/budget-variance.png)
 
 *Over 2017–2025 sales beat budget by $11.6M (+5.8%), and the online store accounts for $11.3M of it. 2020 and 2024 missed plan in every category: each budget is the prior year plus a growth target, so a strong year sets a high bar for the next.*
+
+![Product Detail drill-through page for the top-selling product: header with brand, category, price band, list price and cost, KPI cards, monthly sales, price, volume and margin by year, customers by age band and gender, and sales by channel](docs/images/product-detail.png)
+
+*Product Detail for the top seller. Its average selling price fell from $2,260 in 2016 to $895 in 2025 while the margin held at about 65%.*
 
 ## Architecture
 
@@ -149,7 +154,7 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 
 ## Roadmap
 
-- A product drill-through page and a report-page tooltip. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
+- A report-page tooltip (mini trend, margin and price-band mix on hover). The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

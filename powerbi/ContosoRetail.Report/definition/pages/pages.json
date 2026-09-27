@@ -6,7 +6,8 @@
     "Customers",
     "Products",
     "StoresChannels",
-    "BudgetVariance"
+    "BudgetVariance",
+    "ProductDetail"
   ],
   "activePageName": "ExecutiveOverview"
 }

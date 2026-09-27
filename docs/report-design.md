@@ -2,7 +2,7 @@
 
 The report is 1280 × 720, built on a 16 px grid, with the **Contoso Executive** theme
 (`StaticResources/RegisteredResources/ContosoExecutive.json`). The first page, **Executive Overview**, is
-already built, and so are **Sales Performance**, **Customers**, **Products**, **Stores & Channels** and **Budget Variance**. The pages below are the plan for the rest of the report.
+already built, and so are **Sales Performance**, **Customers**, **Products**, **Stores & Channels**, **Budget Variance** and the **Product detail** drill-through. The pages below are the plan for the rest of the report.
 
 ## Page plan
 
@@ -14,7 +14,7 @@ already built, and so are **Sales Performance**, **Customers**, **Products**, **
 | **Products** ✅ | What sells, at what price and margin? | KPI cards, full-width scatter of Sales Amount (log scale) vs Margin % per subcategory, top 10 products table (Top N filter), price band summary with data bars; Category slicer in the header | Price bands (sorted by a hidden column), `Sales Mix %` (`ALLSELECTED`), `Products Sold` |
 | **Stores & Channels** ✅ | Where do we sell? | KPI cards, sales by channel and month, physical store sales by country (drill down to state), physical store table with open/close dates, sales per m² by country | Store hierarchy, `Open Stores` (date logic without a relationship), `Sales per Square Meter`, `Online Sales %`, visual-level filters, RLS (test with *View as*) |
 | **Budget Variance** ✅ | Where are we off plan? | KPI cards, waterfall of *Sales vs Budget* by category, *Sales vs Budget %* by store country (bar colour from a measure), category × year heatmap on *Sales vs Budget %* that drills down to months | Many-to-many budget relationships, grain-aware `Budget Amount`, field-value conditional formatting, diverging colour scale |
-| **Product detail** (drill-through) | Everything about one product | Card row, monthly trend, customer age mix | Drill-through filters |
+| **Product detail** (drill-through) ✅ | Everything about one product | Back button; KPI card whose title and subtitle are the product name and attributes (measures); monthly trend; price, volume and margin by year; customers by age band and gender; sales by channel. Left visible, opening on the top seller, so it can be browsed and exported | Drill-through filter with `pageBinding`, filter context flows from the source page, `Subcategory Sales Rank` (`RANKX`) |
 | **Tooltip page** | Context on hover | Mini trend, margin and price-band mix (100% stacked bar) for the hovered category | Report page tooltips |
 
 ## Colour system

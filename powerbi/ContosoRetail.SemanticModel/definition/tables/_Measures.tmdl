@@ -86,6 +86,30 @@ table _Measures
 		formatString: 0.0%
 		displayFolder: Products
 
+	/// Where the product in context ranks by Sales Amount among the products of its subcategory that
+	/// sold in the selected period, e.g. "#3 of 45". BLANK unless exactly one product with sales is in context.
+	measure 'Subcategory Sales Rank' =
+			VAR _Product = SELECTEDVALUE ( 'Product'[Product Name] )
+			VAR _Subcategory = SELECTEDVALUE ( 'Product'[Subcategory] )
+			VAR _SellingPeers =
+			    FILTER (
+			        CALCULATETABLE (
+			            VALUES ( 'Product'[Product Name] ),
+			            REMOVEFILTERS ( 'Product' ),
+			            'Product'[Subcategory] = _Subcategory
+			        ),
+			        NOT ISBLANK ( [Sales Amount] )
+			    )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _Product ) && NOT ISBLANK ( [Sales Amount] ),
+			        "#" & RANKX ( _SellingPeers, [Sales Amount] ) & " of " & COUNTROWS ( _SellingPeers )
+			    )
+		lineageTag: dd612e30-3b86-55a6-9d6d-32176286b82e
+		displayFolder: Products
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
 	/// Share of Sales Amount sold through the online store. Respects a Channel filter, so with only
 	/// physical stores selected it shows 0%.
 	measure 'Online Sales %' =
@@ -320,6 +344,31 @@ table _Measures
 	/// below. Bound to a visual's fill as a field value, so the colour always matches the sign.
 	measure 'Budget Variance Color' = IF ( [Sales vs Budget] < 0, "#E34948", "#2A78D6" )
 		lineageTag: 626be5da-6242-5a69-b5b7-ce6ecb0d1582
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Header of the Product Detail drill-through page: the product in context, or a hint when there
+	/// isn't exactly one.
+	measure 'Selected Product' =
+			SELECTEDVALUE ( 'Product'[Product Name], "Right-click a product and choose Drill through > Product Detail" )
+		lineageTag: c20b834e-606a-5861-ac31-db8c5442053b
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Subheader of the Product Detail page, e.g. "Contoso · Computers › Laptops · $500-999 · list price
+	/// $899.00 · standard cost $412.34". BLANK unless exactly one product is in context.
+	measure 'Selected Product Details' =
+			IF (
+			    HASONEVALUE ( 'Product'[Product Name] ),
+			    SELECTEDVALUE ( 'Product'[Brand] ) & "  ·  "
+			        & SELECTEDVALUE ( 'Product'[Category] ) & " › " & SELECTEDVALUE ( 'Product'[Subcategory] ) & "  ·  "
+			        & SELECTEDVALUE ( 'Product'[Price Band] ) & "  ·  list price "
+			        & FORMAT ( SELECTEDVALUE ( 'Product'[List Price] ), "$#,0.00" ) & "  ·  standard cost "
+			        & FORMAT ( SELECTEDVALUE ( 'Product'[Standard Cost] ), "$#,0.00" )
+			)
+		lineageTag: 8031e69b-5bfe-5f9e-bf01-8c4ab3ca9fda
 		displayFolder: Report Helpers
 
 		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}

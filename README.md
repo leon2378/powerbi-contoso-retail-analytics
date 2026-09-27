@@ -8,16 +8,20 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 
 *Executive Overview on the 100K-order dataset (2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
 
-![Sales Performance page with Avg Order Value selected: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table](docs/images/sales-performance.png)
+![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
 
-*Sales Performance with **Avg Order Value** selected. The metric tiles (a field parameter) switch every chart, and the Time Calculation dropdown (the calculation group) applies YTD, PY, YoY % and more to whichever metric is shown. Order volume peaks on Saturdays, but order value is flat across the week.*
+*Sales Performance. The metric tiles (a field parameter) switch every chart, the Time Calculation dropdown (the calculation group) applies YTD, PY, YoY % and more, and each title names the metric and time calculation on display, e.g. "Orders (YoY %) by month".*
+
+![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
+
+*Customers. The heatmap shows what share of each year's new customers bought again in later years; the colour scale is capped at 25% so the differences between cohorts stay visible.*
 
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, **calculation group** for time intelligence, **field parameter**, **dynamic RLS**, budget at a coarser grain via many-to-many relationships, dynamic format strings |
-| **Report** | **PBIR** (enhanced report format) with a custom, colour-blind-safe theme: Executive Overview and Sales Performance pages, with slicers synced across pages and field-parameter metric tiles |
+| **Report** | **PBIR** (enhanced report format) with a custom, colour-blind-safe theme: Executive Overview, Sales Performance and Customers pages, with slicers synced across pages, field-parameter metric tiles and a cohort retention heatmap |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, PBIR schema + field-reference checks, generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model + report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
@@ -102,6 +106,7 @@ Key design decisions:
 |---|---|---|
 | `dbt build` (fixtures) | broken SQL, contract/type drift, failed data tests, unit-test regressions, source ↔ mart totals mismatch | CI, `tasks.ps1 check` |
 | `check_model_contract.py` | a dbt column renamed or retyped without updating the Power BI model | CI, `check` |
+| `add_lineage_tags.py --check` | hand-written model objects without a `lineageTag`, which Desktop silently drops from visuals | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
 | `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore | CI, `check` |
@@ -114,7 +119,7 @@ Key design decisions:
 
 ## Building out the report
 
-Two pages are built: Executive Overview and Sales Performance (field-parameter metric tiles and a time-calculation dropdown). **[docs/report-design.md](docs/report-design.md)** has the page plan (sales, customers and cohorts, products, stores, budget variance, drill-through), the colour system and the accessibility and performance checklists.
+Three pages are built: Executive Overview, Sales Performance (field-parameter metric tiles and a time-calculation dropdown) and Customers (cohort retention). **[docs/report-design.md](docs/report-design.md)** has the page plan (sales, customers and cohorts, products, stores, budget variance, drill-through), the colour system and the accessibility and performance checklists.
 
 ## Roadmap
 

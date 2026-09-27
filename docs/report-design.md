@@ -2,7 +2,7 @@
 
 The report is 1280 × 720, built on a 16 px grid, with the **Contoso Executive** theme
 (`StaticResources/RegisteredResources/ContosoExecutive.json`). The first page, **Executive Overview**, is
-already built, and so are **Sales Performance**, **Customers** and **Products**. The pages below are the plan for the rest of the report.
+already built, and so are **Sales Performance**, **Customers**, **Products** and **Stores & Channels**. The pages below are the plan for the rest of the report.
 
 ## Page plan
 
@@ -12,7 +12,7 @@ already built, and so are **Sales Performance**, **Customers** and **Products**.
 | **Sales Performance** ✅ | What drives revenue? | Metric tiles (**Metric Selector** field parameter) and a time-calculation dropdown drive a monthly trend, year × channel columns and a weekday profile; brand table; dynamic titles name the selected metric and time calculation | Field parameter, calc group in a slicer, slicers synced across pages |
 | **Customers** ✅ | Are we acquiring and keeping customers? | KPI cards (Customers, Repeat Customer %, Orders and Sales per Customer), new vs returning by year, cohort retention heatmap (Acquisition Cohort × Year), age band × gender, customers by country | `New Customers`, `Cohort Retention %`, conditional-formatting colour scale |
 | **Products** ✅ | What sells, at what price and margin? | KPI cards, full-width scatter of Sales Amount (log scale) vs Margin % per subcategory, top 10 products table (Top N filter), price band summary with data bars; Category slicer in the header | Price bands (sorted by a hidden column), `Sales Mix %` (`ALLSELECTED`), `Products Sold` |
-| **Stores & Channels** | Where do we sell? | Map by store country (bubble size = Sales Amount), online vs physical trend, store table with open/close dates | Store hierarchy, RLS (test with *View as*) |
+| **Stores & Channels** ✅ | Where do we sell? | KPI cards, sales by channel and month, physical store sales by country (drill down to state), physical store table with open/close dates, sales per m² by country | Store hierarchy, `Open Stores` (date logic without a relationship), `Sales per Square Meter`, `Online Sales %`, visual-level filters, RLS (test with *View as*) |
 | **Budget Variance** | Where are we off plan? | Waterfall of *Sales vs Budget* by category, matrix month × category with conditional formatting on *Sales vs Budget %* | Many-to-many budget relationships |
 | **Product detail** (drill-through) | Everything about one product | Card row, monthly trend, customer age mix | Drill-through filters |
 | **Tooltip page** | Context on hover | Mini trend, margin and price-band mix (100% stacked bar) for the hovered category | Report page tooltips |
@@ -74,3 +74,7 @@ These are lessons from building this report by editing TMDL/PBIR files directly:
 - **Calculation groups make every measure Variant.** Text measures (labels, dynamic titles) still work, as
   long as calculation items that do arithmetic pass non-numeric values through (the `ISNUMBER` guard in
   *YoY* and *YoY %*).
+- **No map visuals.** Azure Maps only renders in a Desktop session that is signed in, so anyone opening
+  the `.pbip` without an account sees "sign in" instead of a map. The Bing-based Map and Filled map
+  visuals are being retired (Desktop offers to upgrade them to Azure Maps). The Stores & Channels page
+  shows geography as a country bar chart with a State drill-down level instead.

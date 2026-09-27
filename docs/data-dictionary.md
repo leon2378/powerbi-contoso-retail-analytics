@@ -432,6 +432,65 @@ IF (
 
 </details>
 
+### Stores & Channels
+
+| Measure | Description | Format |
+|---|---|---|
+| **Online Sales %** | Share of Sales Amount sold through the online store. Respects a Channel filter, so with only physical stores selected it shows 0%. | `0.0%` |
+| **Open Stores** | Physical stores open at the end of the selected period: opened on or before it and not closed by then. Stores have no relationship to 'Date', so the period end is read from 'Date' directly. | `#,0` |
+| **Sales per Store** | Average Sales Amount per physical store that sold in the selected period. | `\$#,0` |
+| **Sales per Square Meter** | Physical-store Sales Amount per square metre of selling space, counting the space of the stores that sold in the selected period. It covers the whole period, so compare like-for-like periods. | `\$#,0` |
+
+<details><summary>DAX: Online Sales %</summary>
+
+```dax
+DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Online" ) ) + 0, [Sales Amount] )
+```
+
+</details>
+
+<details><summary>DAX: Open Stores</summary>
+
+```dax
+VAR _PeriodEnd = MAX ( 'Date'[Date] )
+RETURN
+    COUNTROWS (
+        FILTER (
+            Store,
+            Store[Channel] = "Physical"
+                && Store[Open Date] <= _PeriodEnd
+                && ( ISBLANK ( Store[Close Date] ) || Store[Close Date] > _PeriodEnd )
+        )
+    )
+```
+
+</details>
+
+<details><summary>DAX: Sales per Store</summary>
+
+```dax
+VAR _SellingStores =
+    COUNTROWS ( FILTER ( Store, Store[Channel] = "Physical" && NOT ISBLANK ( [Sales Amount] ) ) )
+RETURN
+    DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Physical" ) ), _SellingStores )
+```
+
+</details>
+
+<details><summary>DAX: Sales per Square Meter</summary>
+
+```dax
+VAR _SellingArea =
+    SUMX (
+        FILTER ( Store, Store[Channel] = "Physical" && NOT ISBLANK ( [Sales Amount] ) ),
+        Store[Square Meters]
+    )
+RETURN
+    DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Physical" ) ), _SellingArea )
+```
+
+</details>
+
 ## Tables
 
 ### Sales

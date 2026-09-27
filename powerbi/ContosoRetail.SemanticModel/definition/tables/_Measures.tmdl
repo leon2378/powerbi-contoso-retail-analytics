@@ -86,6 +86,55 @@ table _Measures
 		formatString: 0.0%
 		displayFolder: Products
 
+	/// Share of Sales Amount sold through the online store. Respects a Channel filter, so with only
+	/// physical stores selected it shows 0%.
+	measure 'Online Sales %' =
+			DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Online" ) ) + 0, [Sales Amount] )
+		lineageTag: 48f6cea3-ed3e-5723-b379-125bf7004319
+		formatString: 0.0%
+		displayFolder: Stores & Channels
+
+	/// Physical stores open at the end of the selected period: opened on or before it and not closed
+	/// by then. Stores have no relationship to 'Date', so the period end is read from 'Date' directly.
+	measure 'Open Stores' =
+			VAR _PeriodEnd = MAX ( 'Date'[Date] )
+			RETURN
+			    COUNTROWS (
+			        FILTER (
+			            Store,
+			            Store[Channel] = "Physical"
+			                && Store[Open Date] <= _PeriodEnd
+			                && ( ISBLANK ( Store[Close Date] ) || Store[Close Date] > _PeriodEnd )
+			        )
+			    )
+		lineageTag: 58443938-dbf6-5778-9b6a-850b5cd63174
+		formatString: #,0
+		displayFolder: Stores & Channels
+
+	/// Average Sales Amount per physical store that sold in the selected period.
+	measure 'Sales per Store' =
+			VAR _SellingStores =
+			    COUNTROWS ( FILTER ( Store, Store[Channel] = "Physical" && NOT ISBLANK ( [Sales Amount] ) ) )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Physical" ) ), _SellingStores )
+		lineageTag: 15f71454-de87-51dd-96cc-a12589d6d4e9
+		formatString: \$#,0
+		displayFolder: Stores & Channels
+
+	/// Physical-store Sales Amount per square metre of selling space, counting the space of the stores
+	/// that sold in the selected period. It covers the whole period, so compare like-for-like periods.
+	measure 'Sales per Square Meter' =
+			VAR _SellingArea =
+			    SUMX (
+			        FILTER ( Store, Store[Channel] = "Physical" && NOT ISBLANK ( [Sales Amount] ) ),
+			        Store[Square Meters]
+			    )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Sales Amount], KEEPFILTERS ( Store[Channel] = "Physical" ) ), _SellingArea )
+		lineageTag: 79a6d391-45e8-50da-af6f-6b84ef6da334
+		formatString: \$#,0
+		displayFolder: Stores & Channels
+
 	/// Number of distinct orders.
 	measure Orders = DISTINCTCOUNT ( Sales[Order Number] )
 		formatString: #,0

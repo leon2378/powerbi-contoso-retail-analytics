@@ -55,7 +55,10 @@ table 'Time Intelligence'
 				// Listed explicitly: inside this item SELECTEDMEASUREFORMATSTRING() already returns
 				// this item's own "%" format, so it cannot detect ratio measures.
 				VAR _IsRatioMeasure =
-				    ISSELECTEDMEASURE ( [Margin %], [Discount %], [Sales vs Budget %], [Repeat Customer %], [Cohort Retention %] )
+				    ISSELECTEDMEASURE (
+				        [Margin %], [Discount %], [Sales vs Budget %], [Repeat Customer %], [Cohort Retention %],
+				        [Sales Mix %], [Online Sales %]
+				    )
 				RETURN
 				    // Text measures (labels, dynamic titles) pass through unchanged; a blank current value stays blank.
 				    IF (

@@ -4,7 +4,8 @@
     "ExecutiveOverview",
     "SalesPerformance",
     "Customers",
-    "Products"
+    "Products",
+    "StoresChannels"
   ],
   "activePageName": "ExecutiveOverview"
 }

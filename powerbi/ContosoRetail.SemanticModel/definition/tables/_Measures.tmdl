@@ -72,6 +72,20 @@ table _Measures
 		displayFolder: Margin
 		lineageTag: 1f083133-a34c-4bb4-af55-049a28b895ba
 
+	/// Distinct products with at least one sale in the selected period.
+	measure 'Products Sold' = DISTINCTCOUNT ( Sales[Product Key] )
+		lineageTag: bd8793fc-b6d1-55dc-9b06-5982560b7196
+		formatString: #,0
+		displayFolder: Products
+
+	/// Share of Sales Amount across the products selected outside the visual (slicers and
+	/// cross-filters still apply), e.g. each price band's slice of sales. A visual's rows add up to 100%.
+	measure 'Sales Mix %' =
+			DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) ) )
+		lineageTag: 8b5e3cbe-a870-534a-b9a1-65d574e879a5
+		formatString: 0.0%
+		displayFolder: Products
+
 	/// Number of distinct orders.
 	measure Orders = DISTINCTCOUNT ( Sales[Order Number] )
 		formatString: #,0

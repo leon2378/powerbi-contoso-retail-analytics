@@ -258,6 +258,29 @@ RETURN
 
 </details>
 
+### Products
+
+| Measure | Description | Format |
+|---|---|---|
+| **Products Sold** | Distinct products with at least one sale in the selected period. | `#,0` |
+| **Sales Mix %** | Share of Sales Amount across the products selected outside the visual (slicers and cross-filters still apply), e.g. each price band's slice of sales. A visual's rows add up to 100%. | `0.0%` |
+
+<details><summary>DAX: Products Sold</summary>
+
+```dax
+DISTINCTCOUNT ( Sales[Product Key] )
+```
+
+</details>
+
+<details><summary>DAX: Sales Mix %</summary>
+
+```dax
+DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) ) )
+```
+
+</details>
+
 ### Report Helpers
 
 | Measure | Description | Format |

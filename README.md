@@ -1,6 +1,6 @@
 # Contoso Retail Analytics: end-to-end Power BI
 
-An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a three-page report, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
+An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a four-page report, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
@@ -13,7 +13,7 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Three **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection and a cohort retention heatmap |
+| **Report** | Four **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap and a top-N product table |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
@@ -24,12 +24,17 @@ All pages share one header: Year, Country and Channel slicers that stay in sync 
 - **Executive Overview.** How are we doing against last year and the budget? KPI cards (Sales Amount, Margin %, Orders, Customers, Sales vs Budget %), net sales vs budget by month, sales by category and store country, and a category matrix with Current, PY and YoY %.
 - **Sales Performance.** What drives revenue? Metric tiles (a field parameter) switch every chart between Sales Amount, Margin, Margin %, Orders, Customers and Avg Order Value. The Time Calculation dropdown (the calculation group) applies YTD, PY, YoY %, Rolling 12M and more. Charts show the monthly trend, online vs physical by year, a weekday profile and brand performance, and every title names what's on display, e.g. "Orders (YoY %) by month".
 - **Customers.** Are we acquiring and keeping customers? KPI cards (Customers, Repeat Customer %, Orders per Customer, Sales per Customer), new vs returning customers by year, customers by age band and gender and by country, and a cohort retention heatmap.
+- **Products.** What sells, at what price and margin? KPI cards (Sales Amount, Margin, Margin %, Avg Selling Price, Products Sold), sales vs margin % for each of the 32 subcategories (sales on a log scale), the top 10 products by sales and a price band summary showing each band's share of sales and margin. A Category slicer in the header narrows every visual, e.g. to see how one category's sales split across price bands.
 
 ![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
 
 ![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
 
 *The heatmap shows what share of each year's new customers bought again in later years. Its colour scale is capped at 25%, so the differences between cohorts stay visible next to the 100% diagonal.*
+
+![Products page: KPI cards, sales vs margin % by subcategory on a log scale, the top 10 products by sales and a price band summary with each band's share of sales and margin](docs/images/products.png)
+
+*Margin rises with price: products under $100 earn 49.6%, products at $1,000 and above earn 63.0%. The $100–499 band brings in 45.6% of sales.*
 
 ## Architecture
 
@@ -134,7 +139,7 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 
 ## Roadmap
 
-- Products, Stores and Budget Variance pages, plus a product drill-through and a tooltip page. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
+- Stores and Budget Variance pages, plus a product drill-through and a tooltip page. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

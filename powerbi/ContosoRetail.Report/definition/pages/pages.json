@@ -3,7 +3,8 @@
   "pageOrder": [
     "ExecutiveOverview",
     "SalesPerformance",
-    "Customers"
+    "Customers",
+    "Products"
   ],
   "activePageName": "ExecutiveOverview"
 }

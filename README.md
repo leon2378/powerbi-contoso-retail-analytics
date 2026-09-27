@@ -8,6 +8,10 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 
 *Executive Overview on the 100K-order dataset (2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
 
+![Sales Performance page with Avg Order Value selected: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table](docs/images/sales-performance.png)
+
+*Sales Performance with **Avg Order Value** selected. The metric tiles (a field parameter) switch every chart, and the Time Calculation dropdown (the calculation group) applies YTD, PY, YoY % and more to whichever metric is shown. Order volume peaks on Saturdays, but order value is flat across the week.*
+
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |

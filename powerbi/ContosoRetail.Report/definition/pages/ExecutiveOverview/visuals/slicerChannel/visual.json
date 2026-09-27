@@ -64,6 +64,11 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "syncGroup": {
+      "groupName": "Channel",
+      "fieldChanges": true,
+      "filterChanges": true
+    }
   }
 }

@@ -37,10 +37,11 @@ table 'Time Intelligence'
 				        CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
 				    )
 				RETURN
+				    // Text measures (labels, dynamic titles) pass through unchanged.
 				    IF (
-				        ISSELECTEDMEASURE ( [Data Freshness] ),
+				        NOT ISNUMBER ( _Current ),
 				        _Current,
-				        IF ( NOT ISBLANK ( _Current ) && NOT ISBLANK ( _PreviousYear ), _Current - _PreviousYear )
+				        IF ( NOT ISBLANK ( _PreviousYear ), _Current - _PreviousYear )
 				    )
 
 		calculationItem 'YoY %' =
@@ -56,10 +57,11 @@ table 'Time Intelligence'
 				VAR _IsRatioMeasure =
 				    ISSELECTEDMEASURE ( [Margin %], [Discount %], [Sales vs Budget %] )
 				RETURN
+				    // Text measures (labels, dynamic titles) pass through unchanged; a blank current value stays blank.
 				    IF (
-				        ISSELECTEDMEASURE ( [Data Freshness] ) || _IsRatioMeasure || ISBLANK ( _Current ),
-				        BLANK (),
-				        DIVIDE ( _Current - _PreviousYear, _PreviousYear )
+				        NOT ISNUMBER ( _Current ),
+				        _Current,
+				        IF ( NOT _IsRatioMeasure, DIVIDE ( _Current - _PreviousYear, _PreviousYear ) )
 				    )
 
 			formatStringDefinition = "+0.0%;-0.0%;0.0%"

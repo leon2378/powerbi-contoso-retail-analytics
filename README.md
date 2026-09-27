@@ -13,7 +13,7 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, **calculation group** for time intelligence, **field parameter**, **dynamic RLS**, budget at a coarser grain via many-to-many relationships, dynamic format strings |
-| **Report** | **PBIR** (enhanced report format) with a custom, colour-blind-safe theme and a starter Executive Overview page |
+| **Report** | **PBIR** (enhanced report format) with a custom, colour-blind-safe theme: Executive Overview and Sales Performance pages, with slicers synced across pages and field-parameter metric tiles |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, PBIR schema + field-reference checks, generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model + report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
@@ -110,7 +110,7 @@ Key design decisions:
 
 ## Building out the report
 
-The Executive Overview page is a starting point. **[docs/report-design.md](docs/report-design.md)** has the page plan (sales, customers and cohorts, products, stores, budget variance, drill-through), the colour system and the accessibility and performance checklists.
+Two pages are built: Executive Overview and Sales Performance (field-parameter metric tiles and a time-calculation dropdown). **[docs/report-design.md](docs/report-design.md)** has the page plan (sales, customers and cohorts, products, stores, budget variance, drill-through), the colour system and the accessibility and performance checklists.
 
 ## Roadmap
 

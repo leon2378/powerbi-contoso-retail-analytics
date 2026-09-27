@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
-  "name": "slicerCountry",
+  "name": "spSlicerChannel",
   "position": {
-    "x": 868,
+    "x": 1072,
     "y": 6,
-    "z": 4000,
+    "z": 5000,
     "height": 66,
     "width": 192,
-    "tabOrder": 4000
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "slicer",
@@ -23,11 +23,11 @@
                       "Entity": "Store"
                     }
                   },
-                  "Property": "Country"
+                  "Property": "Channel"
                 }
               },
-              "queryRef": "Store.Country",
-              "nativeQueryRef": "Country",
+              "queryRef": "Store.Channel",
+              "nativeQueryRef": "Channel",
               "active": true
             }
           ]
@@ -64,11 +64,11 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true,
     "syncGroup": {
-      "groupName": "Country",
+      "groupName": "Channel",
       "fieldChanges": true,
       "filterChanges": true
-    }
+    },
+    "drillFilterOtherVisuals": true
   }
 }

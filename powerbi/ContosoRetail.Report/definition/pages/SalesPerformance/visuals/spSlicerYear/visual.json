@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
-  "name": "slicerCountry",
+  "name": "spSlicerYear",
   "position": {
-    "x": 868,
+    "x": 664,
     "y": 6,
-    "z": 4000,
+    "z": 3000,
     "height": 66,
     "width": 192,
-    "tabOrder": 4000
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "slicer",
@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Store"
+                      "Entity": "Date"
                     }
                   },
-                  "Property": "Country"
+                  "Property": "Year"
                 }
               },
-              "queryRef": "Store.Country",
-              "nativeQueryRef": "Country",
+              "queryRef": "Date.Year",
+              "nativeQueryRef": "Year",
               "active": true
             }
           ]
@@ -64,11 +64,11 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true,
     "syncGroup": {
-      "groupName": "Country",
+      "groupName": "Year",
       "fieldChanges": true,
       "filterChanges": true
-    }
+    },
+    "drillFilterOtherVisuals": true
   }
 }

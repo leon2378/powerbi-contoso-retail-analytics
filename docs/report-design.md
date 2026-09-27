@@ -2,14 +2,14 @@
 
 The report is 1280 × 720, built on a 16 px grid, with the **Contoso Executive** theme
 (`StaticResources/RegisteredResources/ContosoExecutive.json`). The first page, **Executive Overview**, is
-already built. The pages below are the plan for the rest of the report.
+already built, and so is **Sales Performance**. The pages below are the plan for the rest of the report.
 
 ## Page plan
 
 | Page | Question it answers | Suggested visuals | Model features it shows off |
 |---|---|---|---|
 | **Executive Overview** ✅ | How are we doing vs last year and vs budget? | KPI cards, sales vs budget trend, category YoY matrix, country bars | Time Intelligence calc group, grain-aware budget |
-| **Sales Performance** | What drives revenue? | Line chart driven by the **Metric Selector** field parameter; small multiples by channel; decomposition tree (Category → Subcategory → Brand) | Field parameter, calc group in a slicer |
+| **Sales Performance** ✅ | What drives revenue? | Metric tiles (**Metric Selector** field parameter) and a time-calculation dropdown drive a monthly trend, year × channel columns and a weekday profile; brand table; axis titles name the selected metric | Field parameter, calc group in a slicer, slicers synced across pages |
 | **Customers** | Are we acquiring and keeping customers? | New vs returning (stacked columns by month), cohort matrix (*Acquisition Cohort* × *Year*, value *Customers*), age band × gender | `New Customers`, cohort attribute |
 | **Products** | What sells, at what price and margin? | Scatter of Sales Amount vs Margin % per subcategory, price-band mix, top-N products table | Price bands, margin measures |
 | **Stores & Channels** | Where do we sell? | Map by store country (bubble size = Sales Amount), online vs physical trend, store table with open/close dates | Store hierarchy, RLS (test with *View as*) |
@@ -57,3 +57,15 @@ Taken from a validated, colour-vision-deficiency-checked palette:
 - [ ] Prefer measures over visual-level calculations. Avoid `FILTER(ALL(Sales), …)` patterns.
 - [ ] Check the model size with VertiPaq Analyzer (DAX Studio). `Sales[Order Number]` is the largest column; keep it
       only while drill-to-order is needed.
+
+## Known limitations
+
+- **No measure-driven visual titles.** Once a model has a calculation group, Power BI treats every measure as
+  the Variant data type, and Desktop does not evaluate visual titles bound to measures in this model (confirmed
+  from the engine trace: the title measures were never queried). The Sales Performance page therefore uses
+  static titles, and the value-axis title shows the metric the field parameter resolved to. The Time
+  Intelligence items still pass text measures through unchanged (`ISNUMBER` guard) so label measures such as
+  `[Data Freshness]` keep working in cards.
+- **Field parameter display columns.** `SELECTEDVALUE('Metric Selector'[Metric])` raises a composite-key error
+  because the display column is grouped with the hidden fields column. Read both columns together
+  (`SUMMARIZE('Metric Selector', [Metric], [Metric Fields])`) if you need the selected metric's name in DAX.

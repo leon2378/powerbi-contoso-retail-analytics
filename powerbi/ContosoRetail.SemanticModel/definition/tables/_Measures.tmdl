@@ -292,7 +292,7 @@ table _Measures
 			VAR _Budget = [Budget to Date]
 			RETURN
 			    IF ( NOT ISBLANK ( _Budget ), [Sales in Budget Months] - _Budget )
-		formatString: \$#,0;-\$#,0;\$#,0
+		formatString: +\$#,0;-\$#,0;\$#,0
 		displayFolder: Budget
 		lineageTag: da3fcb4d-5d31-4c17-834c-3553730ae34a
 
@@ -304,6 +304,25 @@ table _Measures
 		formatString: +0.0%;-0.0%;0.0%
 		displayFolder: Budget
 		lineageTag: fd55b1c1-6f81-4701-b147-d2c80124dd49
+
+	/// Product categories with sales below budget in the selected period (0 when all are on or above
+	/// plan). BLANK where no budget applies.
+	measure 'Categories Below Budget' =
+			IF (
+			    NOT ISBLANK ( [Budget to Date] ),
+			    COUNTROWS ( FILTER ( VALUES ( 'Product'[Category] ), [Sales vs Budget] < 0 ) ) + 0
+			)
+		lineageTag: 6362d448-e154-5999-bf18-15ccd0caad7f
+		formatString: #,0
+		displayFolder: Budget
+
+	/// Bar colour for budget variance, from the theme's diverging pair: blue at or above budget, red
+	/// below. Bound to a visual's fill as a field value, so the colour always matches the sign.
+	measure 'Budget Variance Color' = IF ( [Sales vs Budget] < 0, "#E34948", "#2A78D6" )
+		lineageTag: 626be5da-6242-5a69-b5b7-ce6ecb0d1582
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
 
 	/// Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters.
 	measure 'Data Freshness' =

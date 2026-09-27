@@ -12,8 +12,9 @@ change the `///` descriptions in the TMDL files instead.
 | **Budget Amount** | Budget in USD. The budget exists at month x category x store-country grain, so this returns BLANK whenever the report filters below that grain (single days, subcategories, products, stores or any customer attribute) rather than showing a misleading total. | `\$#,0` |
 | **Budget to Date** | Budget for months that have started (up to the last order date), so it can be compared with actuals. Future months' budget is excluded; use [Budget Amount] to show the full plan. | `\$#,0` |
 | **Sales in Budget Months** | Sales Amount for months that have a budget. The first year of history has no budget, so it is excluded from budget comparisons. | `\$#,0` |
-| **Sales vs Budget** | Actuals minus budget over the same months: [Sales in Budget Months] - [Budget to Date]. BLANK where no budget applies. | `\$#,0;-\$#,0;\$#,0` |
+| **Sales vs Budget** | Actuals minus budget over the same months: [Sales in Budget Months] - [Budget to Date]. BLANK where no budget applies. | `+\$#,0;-\$#,0;\$#,0` |
 | **Sales vs Budget %** | Variance to budget as a share of budget, comparing the same months on both sides. | `+0.0%;-0.0%;0.0%` |
+| **Categories Below Budget** | Product categories with sales below budget in the selected period (0 when all are on or above plan). BLANK where no budget applies. | `#,0` |
 
 <details><summary>DAX: Budget Amount</summary>
 
@@ -79,6 +80,17 @@ RETURN
 VAR _Budget = [Budget to Date]
 RETURN
     DIVIDE ( [Sales in Budget Months] - _Budget, _Budget )
+```
+
+</details>
+
+<details><summary>DAX: Categories Below Budget</summary>
+
+```dax
+IF (
+    NOT ISBLANK ( [Budget to Date] ),
+    COUNTROWS ( FILTER ( VALUES ( 'Product'[Category] ), [Sales vs Budget] < 0 ) ) + 0
+)
 ```
 
 </details>
@@ -285,6 +297,7 @@ DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) )
 
 | Measure | Description | Format |
 |---|---|---|
+| **Budget Variance Color** | Bar colour for budget variance, from the theme's diverging pair: blue at or above budget, red below. Bound to a visual's fill as a field value, so the colour always matches the sign. |  |
 | **Data Freshness** | Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters. |  |
 | **Selected Time Calculation Suffix** | " (YTD)"-style suffix naming the selected Time Intelligence item; BLANK for Current. |  |
 | **Selected Metric Label** | Name of the metric picked in the Metric Selector field parameter plus the time calculation, e.g. "Margin % (YTD)". Used for dynamic visual titles. |  |
@@ -292,6 +305,14 @@ DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) )
 | **Title Metric by Weekday** | Dynamic title for the weekday chart on the Sales Performance page. |  |
 | **Title Brand Performance** | Dynamic title for the brand table on the Sales Performance page (names the time calculation). |  |
 | **Title Metric by Month** | Dynamic title for the monthly trend on the Sales Performance page. |  |
+
+<details><summary>DAX: Budget Variance Color</summary>
+
+```dax
+IF ( [Sales vs Budget] < 0, "#E34948", "#2A78D6" )
+```
+
+</details>
 
 <details><summary>DAX: Data Freshness</summary>
 

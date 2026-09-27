@@ -1,0 +1,139 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
+  "name": "bvKpis",
+  "position": {
+    "x": 16,
+    "y": 76,
+    "z": 6000,
+    "height": 92,
+    "width": 1248,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sales in Budget Months"
+                }
+              },
+              "queryRef": "_Measures.Sales in Budget Months",
+              "nativeQueryRef": "Sales in Budget Months",
+              "displayName": "Sales (budget months)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Budget to Date"
+                }
+              },
+              "queryRef": "_Measures.Budget to Date",
+              "nativeQueryRef": "Budget to Date",
+              "displayName": "Budget to date"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sales vs Budget"
+                }
+              },
+              "queryRef": "_Measures.Sales vs Budget",
+              "nativeQueryRef": "Sales vs Budget",
+              "displayName": "Variance"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Sales vs Budget %"
+                }
+              },
+              "queryRef": "_Measures.Sales vs Budget %",
+              "nativeQueryRef": "Sales vs Budget %",
+              "displayName": "Variance %"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Categories Below Budget"
+                }
+              },
+              "queryRef": "_Measures.Categories Below Budget",
+              "nativeQueryRef": "Categories Below Budget",
+              "displayName": "Categories below budget"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "value": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1000000D"
+                }
+              }
+            },
+            "labelPrecision": {
+              "expr": {
+                "Literal": {
+                  "Value": "1L"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "_Measures.Sales vs Budget"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

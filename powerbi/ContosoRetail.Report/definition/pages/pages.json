@@ -5,7 +5,8 @@
     "SalesPerformance",
     "Customers",
     "Products",
-    "StoresChannels"
+    "StoresChannels",
+    "BudgetVariance"
   ],
   "activePageName": "ExecutiveOverview"
 }

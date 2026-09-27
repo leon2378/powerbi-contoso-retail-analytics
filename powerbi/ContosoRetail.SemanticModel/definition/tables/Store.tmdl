@@ -1,43 +1,51 @@
 /// Stores (dbt mart dim_store), including the online store (Channel = Online, Country Code = ONLINE).
 /// Row-level security filters this table by Country Code.
 table Store
+	lineageTag: a1c47e7f-97d3-4616-a024-b7dc9882b783
 
 	column 'Store Key'
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 5acbacdc-30f4-46df-80e4-ac8f52d4efce
 		summarizeBy: none
 		sourceColumn: store_key
 
 	column 'Store Code'
 		dataType: int64
 		formatString: 0
+		lineageTag: b75c9e00-6e84-40f0-bf00-1910181d3634
 		summarizeBy: none
 		sourceColumn: store_code
 
 	column 'Store Name'
 		dataType: string
+		lineageTag: 4125f907-fbb8-4348-9641-9e259b5ab454
 		summarizeBy: none
 		sourceColumn: store_name
 
 	column Channel
 		dataType: string
+		lineageTag: 76e71dd0-5dcd-4136-9c39-d7eb958d4bfa
 		summarizeBy: none
 		sourceColumn: channel
 
 	column 'Country Code'
 		dataType: string
+		lineageTag: 89222058-3add-4810-9bef-17fef804a298
 		summarizeBy: none
 		sourceColumn: country_code
 
 	column Country
 		dataType: string
+		lineageTag: c1955eb2-14e2-4a31-8517-723a46fbc641
 		dataCategory: Country
 		summarizeBy: none
 		sourceColumn: country_name
 
 	column State
 		dataType: string
+		lineageTag: 09dca4c6-0df3-4f15-94f6-39f1ef2e11a3
 		dataCategory: StateOrProvince
 		summarizeBy: none
 		sourceColumn: state_name
@@ -45,6 +53,7 @@ table Store
 	column 'Open Date'
 		dataType: dateTime
 		formatString: yyyy-mm-dd
+		lineageTag: 0ee90b23-47c7-483b-ab52-355745a3469d
 		summarizeBy: none
 		sourceColumn: open_date
 
@@ -53,6 +62,7 @@ table Store
 	column 'Close Date'
 		dataType: dateTime
 		formatString: yyyy-mm-dd
+		lineageTag: 488f66bd-c110-40e5-96c7-ee915f831487
 		summarizeBy: none
 		sourceColumn: close_date
 
@@ -61,26 +71,33 @@ table Store
 	column 'Square Meters'
 		dataType: int64
 		formatString: #,0
+		lineageTag: 594f2b9e-91fb-452c-8199-17fcf5fc5ad2
 		summarizeBy: none
 		sourceColumn: square_meters
 
 	column Status
 		dataType: string
+		lineageTag: 75b59fb5-5095-49ed-886c-74664db523f0
 		summarizeBy: none
 		sourceColumn: status
 
 	hierarchy 'Store Hierarchy'
+		lineageTag: 6b35f0d4-662d-4b6e-90b4-b07e2b85cad8
 
 		level Channel
+			lineageTag: a7c9c63f-f599-4894-823d-ab919a52a39e
 			column: Channel
 
 		level Country
+			lineageTag: b42d3398-1bd7-4c43-86bf-7c309a8b8c1a
 			column: Country
 
 		level State
+			lineageTag: 0d0b07f4-426c-4d9e-96d0-b857c7670731
 			column: State
 
 		level Store
+			lineageTag: 0ceab0b7-b881-4a6d-935c-2bf39d6c9897
 			column: 'Store Name'
 
 	partition Store = m

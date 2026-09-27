@@ -1,6 +1,7 @@
 /// Local mode only: folder containing the dbt marts exported as Parquet (data/marts).
 /// Set it with: python scripts/set_model_source.py local
 expression DataRoot = "C:\path\to\contoso-retail-analytics\data\marts" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 2c9c9765-6ca2-4adc-b627-62226246d6c3
 	queryGroup: Parameters
 
 	annotation PBI_ResultType = Text
@@ -8,12 +9,14 @@ expression DataRoot = "C:\path\to\contoso-retail-analytics\data\marts" meta [IsP
 /// Fabric mode only: SQL analytics endpoint of the Lakehouse (xxxx.datawarehouse.fabric.microsoft.com).
 /// Replaced per environment by scripts/deploy_fabric.py.
 expression SqlEndpoint = "your-endpoint.datawarehouse.fabric.microsoft.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 26ab46e6-3787-4d43-8426-bf929261253b
 	queryGroup: Parameters
 
 	annotation PBI_ResultType = Text
 
 /// Fabric mode only: Lakehouse name, which is also the database name on the SQL analytics endpoint.
 expression LakehouseName = "lh_contoso" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: daf86463-ca5c-4aa1-8fbf-e6bfd6885d20
 	queryGroup: Parameters
 
 	annotation PBI_ResultType = Text
@@ -21,12 +24,14 @@ expression LakehouseName = "lh_contoso" meta [IsParameterQuery=true, Type="Text"
 /// Incremental refresh window start. Power BI overrides this per partition in the service;
 /// in Desktop it controls how much history is loaded.
 expression RangeStart = #datetime(2010, 1, 1, 0, 0, 0) meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+	lineageTag: f273cb00-8b7b-4bf9-9542-f5cc595400fa
 	queryGroup: Parameters
 
 	annotation PBI_ResultType = DateTime
 
 /// Incremental refresh window end (exclusive).
 expression RangeEnd = #datetime(2030, 1, 1, 0, 0, 0) meta [IsParameterQuery=true, Type="DateTime", IsParameterQueryRequired=true]
+	lineageTag: 58058db0-d372-42a5-97bb-4da39e7cd627
 	queryGroup: Parameters
 
 	annotation PBI_ResultType = DateTime
@@ -42,6 +47,7 @@ expression fnLoadTable =
 		    Source = Parquet.Document(File.Contents(Folder & "\" & tableName & ".parquet"))
 		in
 		    Source
+	lineageTag: 8c8918ad-8b1b-42dc-8e5f-4386ad931af1
 	queryGroup: Functions
 
 	annotation PBI_ResultType = Function

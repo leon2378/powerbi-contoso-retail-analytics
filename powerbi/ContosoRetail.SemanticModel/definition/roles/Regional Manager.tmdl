@@ -7,3 +7,5 @@ role 'Regional Manager'
 
 	tablePermission 'Security Access' = [User Principal Name] = USERPRINCIPALNAME ()
 
+	annotation PBI_Id = 132230506bef495fa610d6e58d428104
+

@@ -1,8 +1,10 @@
 /// Field parameter: lets report users switch the measure shown by a visual with a slicer.
 table 'Metric Selector'
+	lineageTag: e8caa6a8-a7f6-40dc-9178-5921a3376033
 
 	column Metric
 		dataType: string
+		lineageTag: 3c8fed66-77f5-46a3-a0bd-fd62a4c06f95
 		summarizeBy: none
 		sourceColumn: [Value1]
 		sortByColumn: 'Metric Order'
@@ -13,16 +15,22 @@ table 'Metric Selector'
 	column 'Metric Fields'
 		dataType: string
 		isHidden
+		lineageTag: 7b0565cc-8ca8-4fdd-8fec-96d5b11f44c4
 		summarizeBy: none
 		sourceColumn: [Value2]
 		sortByColumn: 'Metric Order'
 
-		extendedProperty ParameterMetadata = {"version":3,"kind":2}
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
 
 	column 'Metric Order'
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: ae20b554-cddb-484f-99ca-22d5b84e4c6d
 		summarizeBy: none
 		sourceColumn: [Value3]
 

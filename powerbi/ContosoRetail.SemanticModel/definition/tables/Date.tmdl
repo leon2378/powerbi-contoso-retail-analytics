@@ -1,11 +1,13 @@
 /// Calendar (dbt mart dim_date), marked as the model's date table. Covers complete years.
 table Date
+	lineageTag: fb7d8835-f3c7-476b-b8f9-8485eb48da15
 	dataCategory: Time
 
 	column Date
 		dataType: dateTime
 		isKey
 		formatString: yyyy-mm-dd
+		lineageTag: 06001172-be07-40f7-a65c-d57773303147
 		summarizeBy: none
 		sourceColumn: date
 
@@ -15,12 +17,14 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: c3b28de4-f08b-4ccd-9304-613e5e65dd43
 		summarizeBy: none
 		sourceColumn: date_key
 
 	column Year
 		dataType: int64
 		formatString: 0
+		lineageTag: 08a60d58-9567-4311-aa1b-728b348315c1
 		summarizeBy: none
 		sourceColumn: year
 
@@ -28,17 +32,20 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: a99959e7-9d6f-41ee-bd12-ad6950ea5375
 		summarizeBy: none
 		sourceColumn: quarter_number
 
 	column Quarter
 		dataType: string
+		lineageTag: e9ba790c-25bc-4cd2-9547-6eb7942d6f23
 		summarizeBy: none
 		sourceColumn: quarter
 		sortByColumn: 'Quarter Number'
 
 	column 'Year Quarter'
 		dataType: string
+		lineageTag: 61aaa157-0bb4-4b52-adc4-4fc5788b177a
 		summarizeBy: none
 		sourceColumn: year_quarter
 		sortByColumn: 'Year Quarter Number'
@@ -47,6 +54,7 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 48a9a37d-c80d-413e-ac0b-1f0c8fc68bfb
 		summarizeBy: none
 		sourceColumn: year_quarter_number
 
@@ -54,23 +62,27 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: ee77a645-6fc9-41a0-a773-944599539018
 		summarizeBy: none
 		sourceColumn: month_number
 
 	column Month
 		dataType: string
+		lineageTag: 0a351a2d-37f3-45aa-8500-388729b51729
 		summarizeBy: none
 		sourceColumn: month_name
 		sortByColumn: 'Month Number'
 
 	column 'Month Short'
 		dataType: string
+		lineageTag: 3e66a49c-2e36-4c6f-80d7-c7e3a16d8d50
 		summarizeBy: none
 		sourceColumn: month_short
 		sortByColumn: 'Month Number'
 
 	column 'Year Month'
 		dataType: string
+		lineageTag: 45ea027d-3a04-483d-99b1-6eb5011aa2bb
 		summarizeBy: none
 		sourceColumn: year_month
 		sortByColumn: 'Year Month Number'
@@ -79,13 +91,15 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: e645a939-8ef9-41a3-9449-c4560a8a869a
 		summarizeBy: none
 		sourceColumn: year_month_number
 
+	/// First day of the month. Use it on line and area charts for a continuous monthly axis.
 	column 'Month Start Date'
 		dataType: dateTime
-		isHidden
-		formatString: yyyy-mm-dd
+		formatString: mmm yyyy
+		lineageTag: b1c6fc06-bedf-41f8-a1ca-da5c56d1c505
 		summarizeBy: none
 		sourceColumn: month_start_date
 
@@ -95,17 +109,20 @@ table Date
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 05406123-46db-461a-a4c5-7610788360fa
 		summarizeBy: none
 		sourceColumn: day_of_week_number
 
 	column 'Day of Week'
 		dataType: string
+		lineageTag: d3c36c97-140b-4e06-814c-0b7144799485
 		summarizeBy: none
 		sourceColumn: day_of_week
 		sortByColumn: 'Day of Week Number'
 
 	column 'Day of Week Short'
 		dataType: string
+		lineageTag: 3c1a6a1b-b263-4c9c-8297-542f410adf76
 		summarizeBy: none
 		sourceColumn: day_of_week_short
 		sortByColumn: 'Day of Week Number'
@@ -113,18 +130,21 @@ table Date
 	column 'Day of Month'
 		dataType: int64
 		formatString: 0
+		lineageTag: 2f04a01c-d987-4dd5-aa9d-b1131c77b4b3
 		summarizeBy: none
 		sourceColumn: day_of_month
 
 	column 'ISO Week'
 		dataType: int64
 		formatString: 0
+		lineageTag: dc9e5326-fa10-4c55-aa5a-2a04ff259654
 		summarizeBy: none
 		sourceColumn: iso_week_number
 
 	column 'Is Weekend'
 		dataType: boolean
 		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: b121fcbc-44b7-4b73-84a2-ac65e21e157b
 		summarizeBy: none
 		sourceColumn: is_weekend
 
@@ -133,21 +153,27 @@ table Date
 		dataType: boolean
 		isHidden
 		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 24908391-4198-4bf9-84b5-b4ddf2106cb6
 		summarizeBy: none
 		sourceColumn: date_with_sales
 
 	hierarchy Calendar
+		lineageTag: 43c4b872-dedc-4570-8509-bf7220d32be8
 
 		level Year
+			lineageTag: 77c9c05d-fd5c-492b-8156-a50d9af8ceb2
 			column: Year
 
 		level Quarter
+			lineageTag: 4db8fbe1-07fd-4f02-9b7d-083bd6250266
 			column: 'Year Quarter'
 
 		level Month
+			lineageTag: 6e69e8fb-d03e-4e24-8013-d18c820f0b3d
 			column: 'Year Month'
 
 		level Date
+			lineageTag: 5c0c3d49-19dc-4161-99d4-4c76c0ec3bd6
 			column: Date
 
 	partition Date = m

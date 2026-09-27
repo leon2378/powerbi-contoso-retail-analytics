@@ -5,7 +5,7 @@
     "x": 16,
     "y": 8,
     "z": 1000,
-    "height": 44,
+    "height": 40,
     "width": 600,
     "tabOrder": 1000
   },
@@ -22,7 +22,7 @@
                     "value": "Executive Overview",
                     "textStyle": {
                       "fontWeight": "bold",
-                      "fontSize": "20pt",
+                      "fontSize": "18pt",
                       "color": "#0B0B0B"
                     }
                   }
@@ -41,6 +41,40 @@
               "expr": {
                 "Literal": {
                   "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
                 }
               }
             }

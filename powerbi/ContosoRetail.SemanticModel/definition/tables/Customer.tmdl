@@ -1,31 +1,37 @@
 /// Customers (dbt mart dim_customer). Street-level PII is removed upstream.
 table Customer
+	lineageTag: 7d6bcaea-c4da-46ea-a6d8-45d323b51da0
 
 	column 'Customer Key'
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 19b88ceb-5363-4b29-a603-c83b3256f1d1
 		summarizeBy: none
 		sourceColumn: customer_key
 
 	column 'Customer Name'
 		dataType: string
+		lineageTag: 551d561c-b510-4a67-89c8-91a13bb0c6ae
 		summarizeBy: none
 		sourceColumn: customer_name
 
 	column Gender
 		dataType: string
+		lineageTag: 1449ea2a-e29d-4662-9681-526680f1be41
 		summarizeBy: none
 		sourceColumn: gender
 
 	column Age
 		dataType: int64
 		formatString: 0
+		lineageTag: 2156ba3d-0ffb-46de-9927-8c2586f0f5a1
 		summarizeBy: none
 		sourceColumn: age
 
 	column 'Age Band'
 		dataType: string
+		lineageTag: 454a8368-ce5e-4147-ba17-01aeacd22419
 		summarizeBy: none
 		sourceColumn: age_band
 		sortByColumn: 'Age Band Sort'
@@ -34,16 +40,19 @@ table Customer
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: f5579328-6011-4879-a96e-3e6663825459
 		summarizeBy: none
 		sourceColumn: age_band_sort
 
 	column Occupation
 		dataType: string
+		lineageTag: a147ba25-64f1-4b4a-a3ff-0331d77bab93
 		summarizeBy: none
 		sourceColumn: occupation
 
 	column City
 		dataType: string
+		lineageTag: 1032be16-b1a1-4d23-9129-4fa207d7dca0
 		dataCategory: City
 		summarizeBy: none
 		sourceColumn: city
@@ -51,17 +60,20 @@ table Customer
 	column 'State Code'
 		dataType: string
 		isHidden
+		lineageTag: fa3dca18-5cf7-4a48-b49b-d58608005134
 		summarizeBy: none
 		sourceColumn: state_code
 
 	column State
 		dataType: string
+		lineageTag: 9b63f4a6-27f2-4f9c-acd4-411b128f94cd
 		dataCategory: StateOrProvince
 		summarizeBy: none
 		sourceColumn: state_name
 
 	column 'Postal Code'
 		dataType: string
+		lineageTag: 0c1a5167-5277-4860-a410-be34904daae2
 		dataCategory: PostalCode
 		summarizeBy: none
 		sourceColumn: postal_code
@@ -69,29 +81,34 @@ table Customer
 	column 'Country Code'
 		dataType: string
 		isHidden
+		lineageTag: 53642841-2bbb-4a46-9bc1-db179279d854
 		summarizeBy: none
 		sourceColumn: country_code
 
 	column Country
 		dataType: string
+		lineageTag: 8dbe08fe-db46-4247-a97a-ad1e4481d64a
 		dataCategory: Country
 		summarizeBy: none
 		sourceColumn: country_name
 
 	column Continent
 		dataType: string
+		lineageTag: a76c7b63-e6f3-43fd-830f-36a18ffecf65
 		dataCategory: Continent
 		summarizeBy: none
 		sourceColumn: continent
 
 	column Latitude
 		dataType: double
+		lineageTag: df0caba9-096f-4f0c-9b9e-b146b1150fba
 		dataCategory: Latitude
 		summarizeBy: none
 		sourceColumn: latitude
 
 	column Longitude
 		dataType: double
+		lineageTag: 514669e4-5954-46d9-80ef-e91c88991874
 		dataCategory: Longitude
 		summarizeBy: none
 		sourceColumn: longitude
@@ -100,6 +117,7 @@ table Customer
 	column 'First Order Date'
 		dataType: dateTime
 		formatString: yyyy-mm-dd
+		lineageTag: 02bd5449-f2cb-4e69-8290-19d797d28b3e
 		summarizeBy: none
 		sourceColumn: first_order_date
 
@@ -108,27 +126,34 @@ table Customer
 	/// Year of first purchase ("No purchase" for prospects). Use for cohort analysis.
 	column 'Acquisition Cohort'
 		dataType: string
+		lineageTag: 0560448f-d8e2-42cc-89a3-38d1cb7c4ed0
 		summarizeBy: none
 		sourceColumn: acquisition_cohort
 
 	column 'Has Purchased'
 		dataType: boolean
 		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 5fec88a8-4bdd-4851-b6d7-f67e3167d68f
 		summarizeBy: none
 		sourceColumn: has_purchased
 
 	hierarchy Geography
+		lineageTag: 8561d5d5-c407-421f-9880-6e02cb9dfb46
 
 		level Continent
+			lineageTag: 957edfd9-4fc6-48ec-9fd8-bf56a292243f
 			column: Continent
 
 		level Country
+			lineageTag: 31125796-e9aa-4ed3-a479-b1f87a7f2262
 			column: Country
 
 		level State
+			lineageTag: 0d5cf765-138f-4d02-bdda-78b940692264
 			column: State
 
 		level City
+			lineageTag: 77843573-e7a1-4209-b668-fd6cf664366c
 			column: City
 
 	partition Customer = m

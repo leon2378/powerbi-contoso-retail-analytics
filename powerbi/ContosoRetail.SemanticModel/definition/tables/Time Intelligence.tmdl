@@ -2,6 +2,7 @@
 /// Prior-year items only compare dates that have sales ('Date'[Date With Sales]), so a partial
 /// current year is compared like-for-like with the same span of the previous year.
 table 'Time Intelligence'
+	lineageTag: 9292aef3-f500-40ac-816d-1c80f2b9285b
 
 	calculationGroup
 		precedence: 10
@@ -49,8 +50,11 @@ table 'Time Intelligence'
 				        SELECTEDMEASURE (),
 				        CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
 				    )
+				// Relative change of a ratio is misleading; use YoY (percentage points) for these.
+				// Listed explicitly: inside this item SELECTEDMEASUREFORMATSTRING() already returns
+				// this item's own "%" format, so it cannot detect ratio measures.
 				VAR _IsRatioMeasure =
-				    SEARCH ( "%", SELECTEDMEASUREFORMATSTRING (), 1, 0 ) > 0
+				    ISSELECTEDMEASURE ( [Margin %], [Discount %], [Sales vs Budget %] )
 				RETURN
 				    IF (
 				        ISSELECTEDMEASURE ( [Data Freshness] ) || _IsRatioMeasure || ISBLANK ( _Current ),
@@ -68,6 +72,7 @@ table 'Time Intelligence'
 
 	column 'Time Calculation'
 		dataType: string
+		lineageTag: d5d45afd-f4dc-4904-923b-fd178eb2a4ae
 		summarizeBy: none
 		sourceColumn: Name
 		sortByColumn: Ordinal
@@ -76,6 +81,7 @@ table 'Time Intelligence'
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 463c8020-5926-40f1-a1f5-9d24951ff0ad
 		summarizeBy: none
 		sourceColumn: Ordinal
 

@@ -3,3 +3,5 @@
 role 'Global Viewer'
 	modelPermission: read
 
+	annotation PBI_Id = feef68c9cbfd47779da888df7cd1156d
+

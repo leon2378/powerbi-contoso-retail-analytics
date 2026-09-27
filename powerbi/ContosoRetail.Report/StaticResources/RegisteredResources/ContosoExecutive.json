@@ -53,63 +53,132 @@
         "background": [
           {
             "show": true,
-            "color": { "solid": { "color": "#FFFFFF" } },
+            "color": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
             "transparency": 0
           }
         ],
         "border": [
           {
             "show": true,
-            "color": { "solid": { "color": "#E6E5E1" } },
+            "color": {
+              "solid": {
+                "color": "#E6E5E1"
+              }
+            },
             "radius": 8
           }
         ],
-        "dropShadow": [{ "show": false }],
-        "padding": [{ "top": 12, "bottom": 12, "left": 16, "right": 16 }],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "padding": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "left": 16,
+            "right": 16
+          }
+        ],
         "title": [
           {
             "show": true,
             "fontSize": 12,
-            "fontColor": { "solid": { "color": "#0B0B0B" } }
+            "fontColor": {
+              "solid": {
+                "color": "#0B0B0B"
+              }
+            }
           }
         ],
         "valueAxis": [
           {
-            "gridlineColor": { "solid": { "color": "#E6E5E1" } },
+            "gridlineColor": {
+              "solid": {
+                "color": "#E6E5E1"
+              }
+            },
             "gridlineThickness": 1,
             "showAxisTitle": false
           }
         ],
-        "categoryAxis": [{ "showAxisTitle": false, "gridlineShow": false }]
+        "categoryAxis": [
+          {
+            "showAxisTitle": false,
+            "gridlineShow": false
+          }
+        ]
       }
     },
     "page": {
       "*": {
         "background": [
           {
-            "color": { "solid": { "color": "#F5F5F3" } },
+            "color": {
+              "solid": {
+                "color": "#F5F5F3"
+              }
+            },
             "transparency": 0
           }
         ],
-        "outspace": [{ "color": { "solid": { "color": "#F5F5F3" } } }]
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F5F5F3"
+              }
+            }
+          }
+        ]
       }
     },
     "lineChart": {
       "*": {
-        "lineStyles": [{ "strokeWidth": 2 }],
-        "legend": [{ "show": true, "position": "Top" }]
+        "lineStyles": [
+          {
+            "strokeWidth": 2
+          }
+        ],
+        "legend": [
+          {
+            "show": true,
+            "position": "Top"
+          }
+        ]
       }
     },
     "textbox": {
       "*": {
-        "background": [{ "show": false }],
-        "border": [{ "show": false }]
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ]
       }
     },
     "slicer": {
       "*": {
-        "background": [{ "show": false }],
-        "border": [{ "show": false }]
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ]
       }
     }
   }

@@ -2,16 +2,19 @@
 /// Deliberately has no relationships; the 'Regional Manager' role reads it with USERPRINCIPALNAME().
 table 'Security Access'
 	isHidden
+	lineageTag: 46f153f8-6967-43ee-aebc-c4e22bbdd9a1
 
 	column 'User Principal Name'
 		dataType: string
 		isHidden
+		lineageTag: 1cdb8e0a-7a79-4c31-b29e-ffb2dd2cbcff
 		summarizeBy: none
 		sourceColumn: user_principal_name
 
 	column 'Country Code'
 		dataType: string
 		isHidden
+		lineageTag: d2773ff9-8d39-4d76-b8b5-ccede3b1b6cd
 		summarizeBy: none
 		sourceColumn: country_code
 

@@ -1,6 +1,7 @@
 /// Order lines (dbt mart fct_sales). Grain: one row per order line. Amounts in USD.
 /// Loaded with incremental refresh: yearly archive partitions plus monthly partitions for recent data.
 table Sales
+	lineageTag: 32524881-ef94-45ff-9cc6-e93be1b24bd9
 
 	refreshPolicy
 		policyType: basic
@@ -9,18 +10,19 @@ table Sales
 		incrementalGranularity: month
 		incrementalPeriods: 3
 		sourceExpression =
-				let
-				    Source = fnLoadTable("fct_sales"),
-				    Selected = Table.SelectColumns(Source, {"order_key", "line_number", "order_date", "delivery_date", "customer_key", "store_key", "product_key", "currency_code", "quantity", "gross_amount_usd", "net_amount_usd", "cost_amount_usd", "net_amount_local", "delivery_days"}, MissingField.Error),
-				    Windowed = Table.SelectRows(Selected, each [order_date] >= Date.From(RangeStart) and [order_date] < Date.From(RangeEnd)),
-				    Typed = Table.TransformColumnTypes(Windowed, {{"order_key", Int64.Type}, {"line_number", Int64.Type}, {"order_date", type date}, {"delivery_date", type date}, {"customer_key", Int64.Type}, {"store_key", Int64.Type}, {"product_key", Int64.Type}, {"currency_code", type text}, {"quantity", Int64.Type}, {"gross_amount_usd", Currency.Type}, {"net_amount_usd", Currency.Type}, {"cost_amount_usd", Currency.Type}, {"net_amount_local", Currency.Type}, {"delivery_days", Int64.Type}})
-				in
-				    Typed
+			let
+			    Source = fnLoadTable("fct_sales"),
+			    Selected = Table.SelectColumns(Source, {"order_key", "line_number", "order_date", "delivery_date", "customer_key", "store_key", "product_key", "currency_code", "quantity", "gross_amount_usd", "net_amount_usd", "cost_amount_usd", "net_amount_local", "delivery_days"}, MissingField.Error),
+			    Windowed = Table.SelectRows(Selected, each [order_date] >= Date.From(RangeStart) and [order_date] < Date.From(RangeEnd)),
+			    Typed = Table.TransformColumnTypes(Windowed, {{"order_key", Int64.Type}, {"line_number", Int64.Type}, {"order_date", type date}, {"delivery_date", type date}, {"customer_key", Int64.Type}, {"store_key", Int64.Type}, {"product_key", Int64.Type}, {"currency_code", type text}, {"quantity", Int64.Type}, {"gross_amount_usd", Currency.Type}, {"net_amount_usd", Currency.Type}, {"cost_amount_usd", Currency.Type}, {"net_amount_local", Currency.Type}, {"delivery_days", Int64.Type}})
+			in
+			    Typed
 
 	/// Order number. Use it for detail tables and drill-through.
 	column 'Order Number'
 		dataType: int64
 		formatString: 0
+		lineageTag: 55c19e70-09c9-4dfe-8df6-01be1733a3ae
 		summarizeBy: none
 		sourceColumn: order_key
 
@@ -28,6 +30,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: feacb5ea-19cf-4be8-a68e-0504b379dbc8
 		summarizeBy: none
 		sourceColumn: line_number
 
@@ -35,6 +38,7 @@ table Sales
 		dataType: dateTime
 		isHidden
 		formatString: yyyy-mm-dd
+		lineageTag: bcbbf4d9-c8bd-4e53-adb0-96d73e3ed360
 		summarizeBy: none
 		sourceColumn: order_date
 
@@ -45,6 +49,7 @@ table Sales
 		dataType: dateTime
 		isHidden
 		formatString: yyyy-mm-dd
+		lineageTag: 0274a6cc-23e1-48c0-ad77-c26050b933f0
 		summarizeBy: none
 		sourceColumn: delivery_date
 
@@ -54,6 +59,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: e6b4a916-8da4-4eed-a5b9-f794e6fa97eb
 		summarizeBy: none
 		sourceColumn: customer_key
 
@@ -61,6 +67,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 5dce1e21-b14d-4250-a759-576a9302d71d
 		summarizeBy: none
 		sourceColumn: store_key
 
@@ -68,12 +75,14 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: debc6fe1-db8f-40e5-8def-60a7d72b97d0
 		summarizeBy: none
 		sourceColumn: product_key
 
 	/// ISO currency of the order. Filter to one currency to use [Sales Amount (Local Currency)].
 	column 'Currency Code'
 		dataType: string
+		lineageTag: a331bd4f-a6d9-40e2-bd71-2e3bb0c380c5
 		summarizeBy: none
 		sourceColumn: currency_code
 
@@ -81,6 +90,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: #,0
+		lineageTag: 9353b703-5425-41d8-bc38-972bb70dda6a
 		summarizeBy: sum
 		sourceColumn: quantity
 
@@ -88,6 +98,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		lineageTag: 2d641e89-f29f-49c9-b59e-5dfccf33c6e9
 		summarizeBy: sum
 		sourceColumn: gross_amount_usd
 
@@ -95,6 +106,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		lineageTag: cad57422-bc08-4cac-aa3f-cdfc273a99fb
 		summarizeBy: sum
 		sourceColumn: net_amount_usd
 
@@ -102,6 +114,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		lineageTag: 1f0dab95-2f82-4464-97c2-a0f897cd05e9
 		summarizeBy: sum
 		sourceColumn: cost_amount_usd
 
@@ -109,6 +122,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: #,0.00
+		lineageTag: 839c780c-d566-4d5c-9176-89d8e4c43976
 		summarizeBy: sum
 		sourceColumn: net_amount_local
 
@@ -116,6 +130,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 41e16e2f-bf16-4fb8-88de-ad83feecb7c3
 		summarizeBy: none
 		sourceColumn: delivery_days
 

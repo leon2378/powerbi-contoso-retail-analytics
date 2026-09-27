@@ -3,11 +3,13 @@
 /// Use the [Budget Amount] measure, which blanks out below budget grain.
 table Budget
 	isHidden
+	lineageTag: 0f631c61-72f9-4d17-b608-8e94e96f4f7a
 
 	column 'Month Start Date'
 		dataType: dateTime
 		isHidden
 		formatString: yyyy-mm-dd
+		lineageTag: e442e79c-31fe-4ad6-8b23-a36d0fe4dbb5
 		summarizeBy: none
 		sourceColumn: month_start_date
 
@@ -17,12 +19,14 @@ table Budget
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: cfd9dcb3-7a66-4fe5-bca0-412a6db8e903
 		summarizeBy: none
 		sourceColumn: category_key
 
 	column 'Store Country Code'
 		dataType: string
 		isHidden
+		lineageTag: 10af34ac-1bff-4ff6-bf65-fd505c388969
 		summarizeBy: none
 		sourceColumn: store_country_code
 
@@ -30,6 +34,7 @@ table Budget
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		lineageTag: 5d0da733-8e49-4e5c-b7fe-2b5c19571967
 		summarizeBy: sum
 		sourceColumn: budget_amount_usd
 

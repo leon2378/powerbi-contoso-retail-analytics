@@ -7,7 +7,9 @@ Checks:
   2. Custom themes validate against the Power BI report theme schema.
   3. Every table/column/measure that a visual or filter references exists in the semantic model
      (TMDL), so a renamed measure fails CI instead of showing a broken visual after deployment.
-  4. PBIR naming rules: folder names match object names, pages.json lists real pages, and every
+  4. Enumerated formatting values (e.g. an axis type) are ones Power BI recognises. Desktop
+     silently ignores unknown values, so these typos are otherwise invisible.
+  5. PBIR naming rules: folder names match object names, pages.json lists real pages, and every
      registered resource file exists.
 
 Usage:
@@ -101,6 +103,74 @@ def field_references(node, found=None):
     return found
 
 
+def enum_values(prop_schema: dict) -> set[str] | None:
+    """Allowed constants of a theme-schema property, if it is an enumeration."""
+    options = prop_schema.get("oneOf") or prop_schema.get("anyOf") or []
+    consts = {o["const"] for o in options if isinstance(o, dict) and isinstance(o.get("const"), str)}
+    consts |= {e for e in prop_schema.get("enum", []) if isinstance(e, str)}
+    return consts or None
+
+
+def find_object_schemas(node, object_names: set[str]):
+    """Locate the {objectName: schema} map inside a theme-schema visual definition."""
+    if isinstance(node, dict):
+        props = node.get("properties")
+        if isinstance(props, dict) and object_names & props.keys():
+            return props
+        for value in node.values():
+            found = find_object_schemas(value, object_names)
+            if found:
+                return found
+    elif isinstance(node, list):
+        for value in node:
+            found = find_object_schemas(value, object_names)
+            if found:
+                return found
+    return None
+
+
+def find_property_schemas(node):
+    """Locate the {propertyName: schema} map inside one formatting object's schema."""
+    if isinstance(node, dict):
+        props = node.get("properties")
+        if isinstance(props, dict) and props and all(isinstance(v, dict) for v in props.values()):
+            return props
+        for value in node.values():
+            found = find_property_schemas(value)
+            if found:
+                return found
+    elif isinstance(node, list):
+        for value in node:
+            found = find_property_schemas(value)
+            if found:
+                return found
+    return None
+
+
+def check_formatting_values(visual_file: Path, visual: dict, theme_schema: dict) -> None:
+    """Enumerated formatting properties (e.g. categoryAxis.axisType) must use a value Power BI knows.
+
+    The PBIR schemas don't constrain these values, and Desktop silently ignores unknown ones, so a
+    typo like 'Continuous' instead of 'Scalar' would otherwise go unnoticed. The report theme schema
+    lists the allowed values per visual type.
+    """
+    objects = visual.get("visual", {}).get("objects") or {}
+    definition = theme_schema.get("definitions", {}).get(f"visual-{visual.get('visual', {}).get('visualType')}")
+    if not objects or definition is None:
+        return
+    object_schemas = find_object_schemas(definition, set(objects)) or {}
+    for object_name, entries in objects.items():
+        property_schemas = find_property_schemas(object_schemas.get(object_name, {})) or {}
+        for entry in entries:
+            for prop, value in (entry.get("properties") or {}).items():
+                literal = value.get("expr", {}).get("Literal", {}).get("Value") if isinstance(value, dict) else None
+                allowed = enum_values(property_schemas.get(prop, {}))
+                if not (isinstance(literal, str) and allowed and literal.startswith("'")):
+                    continue
+                if literal.strip("'") not in allowed:
+                    error(visual_file, f"{object_name}.{prop} = {literal} is not one of {sorted(allowed)}")
+
+
 def check_report(report_dir: Path) -> None:
     pbir = json.loads((report_dir / "definition.pbir").read_text(encoding="utf-8"))
     model_path = pbir.get("datasetReference", {}).get("byPath", {}).get("path")
@@ -109,6 +179,7 @@ def check_report(report_dir: Path) -> None:
     definition = report_dir / "definition"
     pages_meta = json.loads((definition / "pages" / "pages.json").read_text(encoding="utf-8"))
     page_dirs = {p.name: p for p in (definition / "pages").iterdir() if p.is_dir()}
+    theme_schema = fetch_schema(THEME_SCHEMA_URL)
     for name in pages_meta.get("pageOrder", []):
         if name not in page_dirs:
             error(definition / "pages" / "pages.json", f"pageOrder lists '{name}' but no such page folder exists")
@@ -121,6 +192,7 @@ def check_report(report_dir: Path) -> None:
             visual = json.loads(visual_file.read_text(encoding="utf-8"))
             if visual["name"] != visual_file.parent.name or not NAME_RULE.match(visual["name"]):
                 error(visual_file, f"visual name '{visual['name']}' must match folder and be [A-Za-z0-9_-]")
+            check_formatting_values(visual_file, visual, theme_schema)
             if model is None:
                 continue
             for entity, prop in field_references(visual):

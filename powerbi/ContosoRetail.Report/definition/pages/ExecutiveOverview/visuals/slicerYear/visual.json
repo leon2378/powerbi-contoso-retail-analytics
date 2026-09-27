@@ -3,9 +3,9 @@
   "name": "slicerYear",
   "position": {
     "x": 664,
-    "y": 12,
+    "y": 6,
     "z": 3000,
-    "height": 64,
+    "height": 66,
     "width": 192,
     "tabOrder": 3000
   },

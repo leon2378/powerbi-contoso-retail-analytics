@@ -1,35 +1,42 @@
 /// Products (dbt mart dim_product). Category is the budget grain.
 table Product
+	lineageTag: 2c024b06-cae5-4b43-b380-ca698f17a44f
 
 	column 'Product Key'
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 78a0e125-3303-4527-bc77-13b058d3c8be
 		summarizeBy: none
 		sourceColumn: product_key
 
 	column 'Product Code'
 		dataType: string
+		lineageTag: 539c884e-bc69-42c5-a1e9-ba33253fae22
 		summarizeBy: none
 		sourceColumn: product_code
 
 	column 'Product Name'
 		dataType: string
+		lineageTag: f7b77af8-8f72-445b-b44c-dac265dcc706
 		summarizeBy: none
 		sourceColumn: product_name
 
 	column Manufacturer
 		dataType: string
+		lineageTag: e8cba993-de2e-4c6b-8c0b-fff403c1e270
 		summarizeBy: none
 		sourceColumn: manufacturer
 
 	column Brand
 		dataType: string
+		lineageTag: 6adc17a5-6730-4866-b8fb-5952871e69d9
 		summarizeBy: none
 		sourceColumn: brand
 
 	column Color
 		dataType: string
+		lineageTag: 19a2c5bb-8cdf-4cb8-aa69-0ecf4bec2f7c
 		summarizeBy: none
 		sourceColumn: color
 
@@ -37,11 +44,13 @@ table Product
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: eb6326db-473e-4a07-b069-1c6eb6ca9975
 		summarizeBy: none
 		sourceColumn: category_key
 
 	column Category
 		dataType: string
+		lineageTag: f58eac9c-9d39-4ffd-8be5-1a6fd3c0ba10
 		summarizeBy: none
 		sourceColumn: category_name
 
@@ -49,11 +58,13 @@ table Product
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: ca9ce962-3143-432e-9951-254a35629839
 		summarizeBy: none
 		sourceColumn: subcategory_key
 
 	column Subcategory
 		dataType: string
+		lineageTag: c8f5ff2b-fb2f-4586-b798-fca785410022
 		summarizeBy: none
 		sourceColumn: subcategory_name
 
@@ -61,6 +72,7 @@ table Product
 	column 'List Price'
 		dataType: decimal
 		formatString: \$#,0.00
+		lineageTag: 1e75d3e6-004d-4fe2-acb7-62127c782a4e
 		summarizeBy: none
 		sourceColumn: list_price_usd
 
@@ -68,11 +80,13 @@ table Product
 	column 'Standard Cost'
 		dataType: decimal
 		formatString: \$#,0.00
+		lineageTag: 8c36b60c-6817-4d6f-8a2c-39cc1fc55b41
 		summarizeBy: none
 		sourceColumn: standard_cost_usd
 
 	column 'Price Band'
 		dataType: string
+		lineageTag: bb6b1fa0-03ee-4fbb-9791-e0a9f5b85e3c
 		summarizeBy: none
 		sourceColumn: price_band
 		sortByColumn: 'Price Band Sort'
@@ -81,18 +95,23 @@ table Product
 		dataType: int64
 		isHidden
 		formatString: 0
+		lineageTag: 86120ff9-490e-499b-b61b-b8226ac4eeff
 		summarizeBy: none
 		sourceColumn: price_band_sort
 
 	hierarchy 'Product Hierarchy'
+		lineageTag: a7d0a27a-3599-43b3-b223-6204f1ed48e9
 
 		level Category
+			lineageTag: 71553be5-d5db-44c8-b84d-7d9a2a17222c
 			column: Category
 
 		level Subcategory
+			lineageTag: 2fe0f4cf-f6f9-4405-a2c8-3d24a3f2a14d
 			column: Subcategory
 
 		level Product
+			lineageTag: f4750b33-58aa-4288-88c6-08571b2294f2
 			column: 'Product Name'
 
 	partition Product = m

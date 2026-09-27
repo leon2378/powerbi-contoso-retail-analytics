@@ -3,9 +3,9 @@
   "name": "salesVsBudgetTrend",
   "position": {
     "x": 16,
-    "y": 216,
+    "y": 180,
     "z": 7000,
-    "height": 236,
+    "height": 256,
     "width": 768,
     "tabOrder": 7000
   },
@@ -23,11 +23,11 @@
                       "Entity": "Date"
                     }
                   },
-                  "Property": "Year Month"
+                  "Property": "Month Start Date"
                 }
               },
-              "queryRef": "Date.Year Month",
-              "nativeQueryRef": "Year Month",
+              "queryRef": "Date.Month Start Date",
+              "nativeQueryRef": "Month Start Date",
               "active": true
             }
           ]
@@ -75,7 +75,7 @@
                     "Entity": "Date"
                   }
                 },
-                "Property": "Year Month"
+                "Property": "Month Start Date"
               }
             },
             "direction": "Ascending"
@@ -103,8 +103,57 @@
             }
           }
         }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "4D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "16D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "16D"
+                }
+              }
+            }
+          }
+        }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "categoryAxis": [
+        {
+          "properties": {
+            "axisType": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Scalar'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

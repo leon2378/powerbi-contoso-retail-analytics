@@ -10,8 +10,10 @@ change the `///` descriptions in the TMDL files instead.
 | Measure | Description | Format |
 |---|---|---|
 | **Budget Amount** | Budget in USD. The budget exists at month x category x store-country grain, so this returns BLANK whenever the report filters below that grain (single days, subcategories, products, stores or any customer attribute) rather than showing a misleading total. | `\$#,0` |
-| **Sales vs Budget** | Sales Amount minus Budget Amount. BLANK where no budget applies. | `\$#,0;-\$#,0;\$#,0` |
-| **Sales vs Budget %** | Variance to budget as a share of Budget Amount. | `+0.0%;-0.0%;0.0%` |
+| **Budget to Date** | Budget for months that have started (up to the last order date), so it can be compared with actuals. Future months' budget is excluded; use [Budget Amount] to show the full plan. | `\$#,0` |
+| **Sales in Budget Months** | Sales Amount for months that have a budget. The first year of history has no budget, so it is excluded from budget comparisons. | `\$#,0` |
+| **Sales vs Budget** | Actuals minus budget over the same months: [Sales in Budget Months] - [Budget to Date]. BLANK where no budget applies. | `\$#,0;-\$#,0;\$#,0` |
+| **Sales vs Budget %** | Variance to budget as a share of budget, comparing the same months on both sides. | `+0.0%;-0.0%;0.0%` |
 
 <details><summary>DAX: Budget Amount</summary>
 
@@ -36,12 +38,37 @@ RETURN
 
 </details>
 
+<details><summary>DAX: Budget to Date</summary>
+
+```dax
+SUMX (
+    FILTER (
+        VALUES ( 'Date'[Year Month Number] ),
+        CALCULATE ( COUNTROWS ( 'Date' ), 'Date'[Date With Sales] = TRUE ) > 0
+    ),
+    [Budget Amount]
+)
+```
+
+</details>
+
+<details><summary>DAX: Sales in Budget Months</summary>
+
+```dax
+CALCULATE (
+    [Sales Amount],
+    FILTER ( VALUES ( 'Date'[Year Month Number] ), NOT ISBLANK ( [Budget Amount] ) )
+)
+```
+
+</details>
+
 <details><summary>DAX: Sales vs Budget</summary>
 
 ```dax
-VAR _Budget = [Budget Amount]
+VAR _Budget = [Budget to Date]
 RETURN
-    IF ( NOT ISBLANK ( _Budget ), [Sales Amount] - _Budget )
+    IF ( NOT ISBLANK ( _Budget ), [Sales in Budget Months] - _Budget )
 ```
 
 </details>
@@ -49,9 +76,9 @@ RETURN
 <details><summary>DAX: Sales vs Budget %</summary>
 
 ```dax
-VAR _Budget = [Budget Amount]
+VAR _Budget = [Budget to Date]
 RETURN
-    DIVIDE ( [Sales Amount] - _Budget, _Budget )
+    DIVIDE ( [Sales in Budget Months] - _Budget, _Budget )
 ```
 
 </details>
@@ -301,6 +328,7 @@ Calendar (dbt mart dim_date), marked as the model's date table. Covers complete 
 | Month | string |  |
 | Month Short | string |  |
 | Year Month | string |  |
+| Month Start Date | dateTime | First day of the month. Use it on line and area charts for a continuous monthly axis. |
 | Day of Week | string |  |
 | Day of Week Short | string |  |
 | Day of Month | int64 |  |

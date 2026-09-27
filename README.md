@@ -1,6 +1,6 @@
 # Contoso Retail Analytics: end-to-end Power BI
 
-An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and executive report, with the practices a production BI team uses: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
+An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a three-page report, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
@@ -8,22 +8,28 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 
 *Executive Overview on the 100K-order dataset (2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
 
-![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
-
-*Sales Performance. The metric tiles (a field parameter) switch every chart, the Time Calculation dropdown (the calculation group) applies YTD, PY, YoY % and more, and each title names the metric and time calculation on display, e.g. "Orders (YoY %) by month".*
-
-![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
-
-*Customers. The heatmap shows what share of each year's new customers bought again in later years; the colour scale is capped at 25% so the differences between cohorts stay visible.*
-
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
-| **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, **calculation group** for time intelligence, **field parameter**, **dynamic RLS**, budget at a coarser grain via many-to-many relationships, dynamic format strings |
-| **Report** | **PBIR** (enhanced report format) with a custom, colour-blind-safe theme: Executive Overview, Sales Performance and Customers pages, with slicers synced across pages, field-parameter metric tiles and a cohort retention heatmap |
-| **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, PBIR schema + field-reference checks, generated data dictionary |
-| **Deploy** | Delta tables to a **Fabric Lakehouse**, model + report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
+| **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
+| **Report** | Three **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection and a cohort retention heatmap |
+| **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, generated data dictionary |
+| **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
+
+## Report pages
+
+All pages share one header: Year, Country and Channel slicers that stay in sync as you move between pages, and a "Data through …" freshness label. Legend colours are pinned to each value (Online and Female are always blue), so filtering never repaints them.
+
+- **Executive Overview.** How are we doing against last year and the budget? KPI cards (Sales Amount, Margin %, Orders, Customers, Sales vs Budget %), net sales vs budget by month, sales by category and store country, and a category matrix with Current, PY and YoY %.
+- **Sales Performance.** What drives revenue? Metric tiles (a field parameter) switch every chart between Sales Amount, Margin, Margin %, Orders, Customers and Avg Order Value. The Time Calculation dropdown (the calculation group) applies YTD, PY, YoY %, Rolling 12M and more. Charts show the monthly trend, online vs physical by year, a weekday profile and brand performance, and every title names what's on display, e.g. "Orders (YoY %) by month".
+- **Customers.** Are we acquiring and keeping customers? KPI cards (Customers, Repeat Customer %, Orders per Customer, Sales per Customer), new vs returning customers by year, customers by age band and gender and by country, and a cohort retention heatmap.
+
+![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
+
+![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
+
+*The heatmap shows what share of each year's new customers bought again in later years. Its colour scale is capped at 25%, so the differences between cohorts stay visible next to the 100% diagonal.*
 
 ## Architecture
 
@@ -37,31 +43,35 @@ flowchart LR
     F -->|SQL analytics endpoint| G[Semantic model<br/>Import + incremental refresh]
     G --> H[Report · RLS · Apps]
     subgraph CI [GitHub Actions]
-        I[dbt build on fixtures] --> J[contract + PBIR checks]
+        I[dbt build on fixtures] --> J[contract, lineage + PBIR checks]
         K[TMDL / DAX validation] --> L[Best Practice Analyzer]
     end
     CI -.gates.-> M[deploy_fabric.py<br/>fabric-cicd]
     M --> G
 ```
 
-The semantic model has **one** data-access function, `fnLoadTable`. `scripts/set_model_source.py` switches its body between local Parquet files and the Fabric Lakehouse, so the same model runs on a laptop with no cloud account and in production. It is not an `if/else` inside M: the Power BI service would then demand a gateway for the unused file source.
+The semantic model has **one** data-access function, `fnLoadTable`. `scripts/set_model_source.py` switches its body between local Parquet files and the Fabric Lakehouse, so the same model runs on a laptop with no cloud account and in production. It is not an `if/else` inside M, because the Power BI service would then demand a gateway for the unused file source.
 
 ## Quick start (local, no cloud needed)
 
-Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (enable *Options → Preview features → Store reports using enhanced metadata format (PBIR)*), and optionally the .NET 8 SDK for the TMDL validator.
+Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (a recent version; if your version lists them under *Options → Preview features*, enable the Power BI Project, TMDL and PBIR options), and optionally the .NET 8 SDK for the TMDL validator.
 
 ```powershell
 .\tasks.ps1 setup            # .venv + dependencies
 .\tasks.ps1 all -Size 1m     # download ~66 MB, dbt build + tests, point the model at data\marts
 ```
 
-Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh**. Before committing, run `.\tasks.ps1 model-reset` so your local path is not committed (CI warns if it is).
+Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh**.
+
+- **After changing model files outside Desktop** (editing TMDL, or pulling someone else's changes), close Power BI Desktop completely and open the `.pbip` again. Reopening the file inside a running Desktop session can leave new measures out of the visuals.
+- **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop.
 
 Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site), `dictionary`, `deploy`. Run `.\tasks.ps1 help` for the full list.
 
 ## Repository layout
 
 ```
+├── tasks.ps1                 task runner: setup, data, build, check, model-local/reset, deploy
 ├── scripts/                  ingest, publish, deploy and validation scripts (Python)
 ├── transform/                dbt project
 │   ├── models/staging/       1:1 with source files: rename, cast, minimise PII
@@ -75,7 +85,7 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site)
 ├── ci/
 │   ├── TmdlValidator/        .NET tool: TOM deserialisation + DAX reference checks
 │   └── bpa-rules.json        Best Practice Analyzer rules (severity 3 fails CI)
-├── docs/                     data dictionary (generated), deployment and report-design guides
+├── docs/                     data dictionary (generated), deployment and report-design guides, screenshots
 └── .github/workflows/        ci.yml (quality gates), deploy.yml (Fabric CD)
 ```
 
@@ -94,8 +104,9 @@ erDiagram
 
 Key design decisions:
 
-- **Grain-aware budget.** The budget exists per month × category × store country. `[Budget Amount]` checks the filter context and returns BLANK below that grain (a single day, a product, a customer segment), instead of silently showing a wrong number.
-- **One calculation group instead of 100 measures.** `Time Intelligence` provides Current, MTD, QTD, YTD, PY, PY YTD, YoY, YoY % and Rolling 12M for every measure. Prior-year items only compare dates that have sales, so a partial year is compared like for like. YoY % is suppressed for ratio measures, where it would be misleading.
+- **Grain-aware budget.** The budget exists per month × category × store country. `[Budget Amount]` checks the filter context and returns BLANK below that grain (a single day, a product, a customer segment) instead of silently showing a wrong number. Budget variance compares only months that have both actuals and a budget.
+- **One calculation group instead of 100 measures.** `Time Intelligence` provides Current, MTD, QTD, YTD, PY, PY YTD, YoY, YoY % and Rolling 12M for every measure. Prior-year items only compare dates that have sales, so a partial year is compared like for like. YoY % is suppressed for ratio measures, where it would be misleading, and text measures (labels, titles) pass through unchanged.
+- **Cohort retention.** `[Cohort Retention %]` divides the customers active in a period by the size of their acquisition cohort, counted over the cohort's whole first year regardless of the date filter. With Acquisition Cohort on rows and Year on columns, it forms the retention triangle.
 - **Dynamic RLS.** `Regional Manager` filters stores (and, through the relationship, the budget) by the signed-in user's entitlements. `Global Viewer` is the unrestricted role. Entitlements are data (a dbt seed), not hard-coded DAX.
 - **Import + incremental refresh**, not Direct Lake. Up to about 10M orders, Import keeps full DAX and calculated-column flexibility, runs offline and demonstrates partition management. At 100M+ rows, switch the partitions to Direct Lake on the same Lakehouse tables.
 - **Descriptions live next to the code.** Every measure has a `///` description (enforced by BPA), which feeds the field-list tooltips, Copilot and the generated [data dictionary](docs/data-dictionary.md).
@@ -109,20 +120,21 @@ Key design decisions:
 | `add_lineage_tags.py --check` | hand-written model objects without a `lineageTag`, which Desktop silently drops from visuals | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
-| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore | CI, `check` |
+| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
+
+Lessons from building the report by editing TMDL and PBIR directly are in the [report design guide](docs/report-design.md#working-with-the-project-outside-desktop).
 
 ## Deploying to Microsoft Fabric
 
 `main` deploys to DEV automatically. TEST and PROD are promoted manually, and PROD needs an approval. The pipeline builds the marts, publishes them as Delta tables, deploys the model and report with fabric-cicd, binds the data connection and runs an enhanced refresh. One-time setup (workspaces, service principal with OIDC, connection, GitHub environments) is in **[docs/deployment.md](docs/deployment.md)**.
 
-## Building out the report
-
-Three pages are built: Executive Overview, Sales Performance (field-parameter metric tiles and a time-calculation dropdown) and Customers (cohort retention). **[docs/report-design.md](docs/report-design.md)** has the page plan (sales, customers and cohorts, products, stores, budget variance, drill-through), the colour system and the accessibility and performance checklists.
+Status: the deployable build (the model switched to the Fabric source) is produced and validated in every CI run. A live deployment needs a Fabric capacity (a trial works) and the one-time setup; until the `FABRIC_ENABLED` variable is set, the deploy workflow skips itself.
 
 ## Roadmap
 
+- Products, Stores and Budget Variance pages, plus a product drill-through and a tooltip page. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

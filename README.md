@@ -98,7 +98,7 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site)
 │   ├── models/staging/       1:1 with source files: rename, cast, minimise PII
 │   ├── models/marts/         star schema + contracts, unit tests (exported to Parquet)
 │   ├── seeds/                budget growth targets, RLS entitlements
-│   └── tests/                singular tests (source ↔ mart reconciliation)
+│   └── tests/                singular tests (source ↔ mart reconciliation, order-grain assumptions)
 ├── powerbi/
 │   ├── ContosoRetail.pbip
 │   ├── ContosoRetail.SemanticModel/definition/   TMDL: tables, measures, roles, relationships
@@ -106,7 +106,8 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site)
 ├── ci/
 │   ├── TmdlValidator/        .NET tool: TOM deserialisation + DAX reference checks
 │   └── bpa-rules.json        Best Practice Analyzer rules (severity 3 fails CI)
-├── docs/                     data dictionary (generated), deployment and report-design guides, screenshots
+├── tools/PerfKit/            .NET tool: trace, replay and size the model running in Desktop
+├── docs/                     data dictionary (generated), deployment, report-design and performance guides, screenshots
 └── .github/workflows/        ci.yml (quality gates), deploy.yml (Fabric CD)
 ```
 
@@ -146,6 +147,15 @@ Key design decisions:
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
 
 Lessons from building the report by editing TMDL and PBIR directly are in the [report design guide](docs/report-design.md#working-with-the-project-outside-desktop).
+
+## Performance at 10M orders
+
+The same pipeline and report were run on SQLBI's 10M-order release (23.7M order lines, 1.7M customers). Details, method and how to reproduce are in **[docs/performance.md](docs/performance.md)**.
+
+- `dbt build` with all 57 tests: **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **845 MB**.
+- Every query the report sends was recorded during a click-through and replayed on a cleared cache: **93% run under 1 s cold** (up from 76%), the 90th percentile dropped from 3.7 s to **0.83 s**, and warm queries take 6 ms (median).
+- The gains came from counting orders by their first line where no product filter applies (a dbt test guards the assumption), a cheaper repeat-customer count, and Units instead of Orders in the brand table. The six queries still above 1 s cold count distinct customers among 1.7M.
+- The run also caught a check that only failed at scale: sub-cent rounding across 23.7M lines broke the source ↔ mart reconciliation test's $1 tolerance. It now rounds like the mart and requires an exact match.
 
 ## Deploying to Microsoft Fabric
 

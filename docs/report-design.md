@@ -52,11 +52,14 @@ Taken from a validated, colour-vision-deficiency-checked palette:
 
 ## Performance checklist
 
-- [ ] Performance Analyzer: every visual under 1 s on the 10M dataset.
-- [ ] No slicers on high-cardinality columns (customer name, order number). Use search or drill-through instead.
-- [ ] Prefer measures over visual-level calculations. Avoid `FILTER(ALL(Sales), …)` patterns.
-- [ ] Check the model size with VertiPaq Analyzer (DAX Studio). `Sales[Order Number]` is the largest column; keep it
-      only while drill-to-order is needed.
+Measured on the 10M dataset; results and method in [performance.md](performance.md).
+
+- [x] Visuals under 1 s on the 10M dataset: 81 of 87 distinct queries run under 1 s cold and all under 0.9 s warm. The
+      six exceptions count distinct customers among 1.7M (1.1 to 1.8 s cold).
+- [x] No slicers on high-cardinality columns (customer name, order number). Use search or drill-through instead.
+- [x] Prefer measures over visual-level calculations. Avoid `FILTER(ALL(Sales), …)` patterns.
+- [x] Model size checked (`tools/PerfKit vertipaq`): 845 MB at 10M. `Sales[Order Number]` is the largest column (90 MB
+      plus its hierarchy); it is still needed for `[Orders]` under product filters.
 
 ## Working with the project outside Desktop
 

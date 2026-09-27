@@ -65,11 +65,12 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Orders"
+                  "Property": "Quantity"
                 }
               },
-              "queryRef": "_Measures.Orders",
-              "nativeQueryRef": "Orders"
+              "queryRef": "_Measures.Quantity",
+              "nativeQueryRef": "Quantity",
+              "displayName": "Units"
             }
           ]
         }

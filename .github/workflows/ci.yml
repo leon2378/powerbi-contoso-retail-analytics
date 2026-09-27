@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call: # reused by deploy.yml so nothing ships without passing these checks
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  data:
+    name: dbt build + contracts + report
+    runs-on: ubuntu-latest
+    env:
+      CONTOSO_RAW_DIR: data/raw
+      CONTOSO_MARTS_DIR: data/marts
+      DUCKDB_PATH: data/warehouse/ci.duckdb
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate fixture data (same schema as the SQLBI release)
+        run: |
+          python scripts/make_fixture_data.py --out data/raw
+          mkdir -p data/marts data/warehouse
+
+      - name: dbt build (models, contracts, data tests, unit tests)
+        run: dbt build --project-dir transform --profiles-dir transform
+
+      - name: dbt docs
+        run: dbt docs generate --project-dir transform --profiles-dir transform
+
+      - name: Contract check (dbt marts <-> semantic model)
+        run: python scripts/check_model_contract.py
+
+      - name: Data dictionary is up to date
+        run: python scripts/generate_data_dictionary.py --check
+
+      - uses: actions/cache@v6
+        with:
+          path: .cache/schemas
+          key: pbir-schemas-${{ hashFiles('powerbi/**/*.json', 'powerbi/**/*.pbir', 'powerbi/**/*.pbism', 'powerbi/**/*.pbip') }}
+          restore-keys: pbir-schemas-
+
+      - name: Report checks (PBIR schemas, theme, field references)
+        run: python scripts/validate_report.py
+
+      - name: Model must be committed in local source mode
+        run: |
+          python scripts/set_model_source.py status | tee status.txt
+          grep -q "source mode: local" status.txt || { echo "::error file=powerbi/ContosoRetail.SemanticModel/definition/expressions.tmdl::Commit the model in local mode. The deploy workflow switches it to Fabric."; exit 1; }
+          grep -q 'C:\\path\\to' status.txt || echo "::warning file=powerbi/ContosoRetail.SemanticModel/definition/expressions.tmdl::DataRoot contains a machine-specific path. Run: python scripts/set_model_source.py reset"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: dbt-artifacts
+          path: |
+            transform/target/manifest.json
+            transform/target/run_results.json
+            transform/target/catalog.json
+            transform/target/index.html
+          if-no-files-found: ignore
+
+  semantic-model:
+    name: TMDL validation + Best Practice Analyzer
+    runs-on: windows-latest
+    env:
+      TABULAR_EDITOR_VERSION: "2.29.0"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Validate TMDL with the Tabular Object Model
+        run: dotnet run --project ci/TmdlValidator -- powerbi/ContosoRetail.SemanticModel/definition --bim build/model.bim
+
+      - name: Validate the Fabric-mode build as well
+        shell: pwsh
+        run: |
+          pip install pyyaml
+          python scripts/deploy_fabric.py --environment CI --build-only --sql-endpoint ci.datawarehouse.fabric.microsoft.com
+          dotnet run --no-build --project ci/TmdlValidator -- build/fabric/CI/ContosoRetail.SemanticModel/definition
+
+      - uses: actions/cache@v6
+        id: te-cache
+        with:
+          path: .tools/TabularEditor
+          key: tabular-editor-${{ env.TABULAR_EDITOR_VERSION }}
+
+      - name: Download Tabular Editor 2
+        if: steps.te-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\te.zip"
+          Invoke-WebRequest "https://github.com/TabularEditor/TabularEditor/releases/download/$env:TABULAR_EDITOR_VERSION/TabularEditor.Portable.zip" -OutFile $zip
+          Expand-Archive $zip -DestinationPath .tools/TabularEditor -Force
+
+      - name: Best Practice Analyzer (severity 3 rules fail the build)
+        shell: pwsh
+        run: |
+          & .tools/TabularEditor/TabularEditor.exe build/model.bim -A ci/bpa-rules.json -G | Out-Default
+          exit $LASTEXITCODE

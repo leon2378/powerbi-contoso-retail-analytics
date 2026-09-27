@@ -1,0 +1,37 @@
+name: contoso_retail
+version: "1.0.0"
+profile: contoso_retail
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Growth applied to prior-year actuals when a category has no row in the
+  # budget_growth_targets seed.
+  default_budget_growth: 0.03
+
+models:
+  contoso_retail:
+    staging:
+      +materialized: view
+    marts:
+      # Marts are the contract with the Power BI semantic model: every column is typed
+      # and enforced, then exported to Parquet (local) / Delta (Fabric) by a post-hook.
+      +materialized: table
+      +contract:
+        enforced: true
+      +post-hook: "{{ export_to_parquet() }}"
+
+seeds:
+  contoso_retail:
+    budget_growth_targets:
+      +column_types:
+        category_name: varchar
+        growth_rate: decimal(6, 4)
+    rls_user_access:
+      +column_types:
+        user_principal_name: varchar
+        country_code: varchar

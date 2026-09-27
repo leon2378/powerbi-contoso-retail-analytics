@@ -1,0 +1,36 @@
+models:
+  - name: stg_contoso__sales
+    description: Order lines, renamed to snake_case and cast to warehouse types. Amounts in USD.
+    columns:
+      - name: order_key
+        data_tests: [not_null]
+      - name: quantity
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 1
+      - name: currency_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["USD", "EUR", "GBP", "CAD", "AUD"]
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["order_key", "line_number"]
+
+  - name: stg_contoso__customers
+    description: Customers with PII-like columns removed (see model header).
+    columns:
+      - name: customer_key
+        data_tests: [not_null, unique]
+
+  - name: stg_contoso__products
+    columns:
+      - name: product_key
+        data_tests: [not_null, unique]
+
+  - name: stg_contoso__stores
+    columns:
+      - name: store_key
+        data_tests: [not_null, unique]

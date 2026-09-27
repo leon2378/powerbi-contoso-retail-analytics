@@ -1,0 +1,5 @@
+/// Unrestricted read access (executives, finance). Needed because once a model has RLS roles,
+/// viewers who are not in any role see no data.
+role 'Global Viewer'
+	modelPermission: read
+

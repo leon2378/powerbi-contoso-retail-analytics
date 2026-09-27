@@ -1,0 +1,9 @@
+/// Dynamic RLS: members see only stores (and their budget) in the countries mapped to their
+/// sign-in in 'Security Access'. The mapping comes from transform/seeds/rls_user_access.csv.
+role 'Regional Manager'
+	modelPermission: read
+
+	tablePermission Store = [Country Code] IN CALCULATETABLE ( VALUES ( 'Security Access'[Country Code] ), 'Security Access'[User Principal Name] = USERPRINCIPALNAME () )
+
+	tablePermission 'Security Access' = [User Principal Name] = USERPRINCIPALNAME ()
+

@@ -1,0 +1,83 @@
+/// Time-intelligence variants for any measure: put 'Time Calculation' on columns or in a slicer.
+/// Prior-year items only compare dates that have sales ('Date'[Date With Sales]), so a partial
+/// current year is compared like-for-like with the same span of the previous year.
+table 'Time Intelligence'
+
+	calculationGroup
+		precedence: 10
+
+		calculationItem Current = SELECTEDMEASURE ()
+
+		calculationItem MTD = CALCULATE ( SELECTEDMEASURE (), DATESMTD ( 'Date'[Date] ) )
+
+		calculationItem QTD = CALCULATE ( SELECTEDMEASURE (), DATESQTD ( 'Date'[Date] ) )
+
+		calculationItem YTD = CALCULATE ( SELECTEDMEASURE (), DATESYTD ( 'Date'[Date] ) )
+
+		calculationItem PY =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
+				)
+
+		calculationItem 'PY YTD' =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATESYTD (
+				        CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
+				    )
+				)
+
+		calculationItem YoY =
+				VAR _Current = SELECTEDMEASURE ()
+				VAR _PreviousYear =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
+				    )
+				RETURN
+				    IF (
+				        ISSELECTEDMEASURE ( [Data Freshness] ),
+				        _Current,
+				        IF ( NOT ISBLANK ( _Current ) && NOT ISBLANK ( _PreviousYear ), _Current - _PreviousYear )
+				    )
+
+		calculationItem 'YoY %' =
+				VAR _Current = SELECTEDMEASURE ()
+				VAR _PreviousYear =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        CALCULATETABLE ( DATEADD ( 'Date'[Date], -1, YEAR ), 'Date'[Date With Sales] = TRUE )
+				    )
+				VAR _IsRatioMeasure =
+				    SEARCH ( "%", SELECTEDMEASUREFORMATSTRING (), 1, 0 ) > 0
+				RETURN
+				    IF (
+				        ISSELECTEDMEASURE ( [Data Freshness] ) || _IsRatioMeasure || ISBLANK ( _Current ),
+				        BLANK (),
+				        DIVIDE ( _Current - _PreviousYear, _PreviousYear )
+				    )
+
+			formatStringDefinition = "+0.0%;-0.0%;0.0%"
+
+		calculationItem 'Rolling 12M' =
+				CALCULATE (
+				    SELECTEDMEASURE (),
+				    DATESINPERIOD ( 'Date'[Date], MAX ( 'Date'[Date] ), -12, MONTH )
+				)
+
+	column 'Time Calculation'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Ordinal
+
+	partition 'Time Intelligence' = calculationGroup
+

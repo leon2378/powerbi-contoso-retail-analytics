@@ -1,0 +1,162 @@
+[
+  {
+    "ID": "CR_MEASURE_DESCRIPTION",
+    "Name": "Measures must have a description",
+    "Category": "Maintenance",
+    "Description": "Descriptions appear as tooltips in the field list and feed the data dictionary and Copilot. Add a /// line above the measure in TMDL.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "string.IsNullOrWhitespace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_MEASURE_DISPLAY_FOLDER",
+    "Name": "Measures must be organised in a display folder",
+    "Category": "Maintenance",
+    "Description": "Keeps the field list navigable as the model grows.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "string.IsNullOrWhitespace(DisplayFolder)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_MEASURE_FORMAT_STRING",
+    "Name": "Visible measures must have a format string",
+    "Category": "Formatting",
+    "Description": "Every KPI should render consistently in every visual. Use a static formatString or a formatStringDefinition. Text measures can opt out with the BestPracticeAnalyzer_IgnoreRules annotation.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhitespace(FormatString) and string.IsNullOrWhitespace(FormatStringExpression)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_USE_DIVIDE",
+    "Name": "Use DIVIDE() instead of the / operator",
+    "Category": "DAX Expressions",
+    "Description": "DIVIDE handles division by zero and blank denominators safely.",
+    "Severity": 3,
+    "Scope": "Measure, CalculatedColumn, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"\\]\\s*\\/(?!\\/)(?!\\*)\") or RegEx.IsMatch(Expression, \"\\)\\s*\\/(?!\\/)(?!\\*)\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_AVOID_IFERROR",
+    "Name": "Avoid IFERROR / ISERROR",
+    "Category": "DAX Expressions",
+    "Description": "Error handling in DAX forces cell-by-cell evaluation. Fix the data or use DIVIDE instead.",
+    "Severity": 2,
+    "Scope": "Measure, CalculatedColumn, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"(?i)\\b(IFERROR|ISERROR)\\s*\\(\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_HIDE_FOREIGN_KEYS",
+    "Name": "Hide foreign key columns",
+    "Category": "Model Layout",
+    "Description": "Users should filter through dimension attributes, not fact-table keys.",
+    "Severity": 3,
+    "Scope": "DataColumn",
+    "Expression": "UsedInRelationships.Any(FromColumn.Name == current.Name and FromColumn.Table.Name == current.Table.Name and FromCardinality.ToString() == \"Many\") and not IsHidden and not Table.IsHidden",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_NO_BIDIRECTIONAL",
+    "Name": "Avoid bi-directional relationships",
+    "Category": "Performance",
+    "Description": "Bi-directional filters cause ambiguity and slow queries. Use CROSSFILTER in a specific measure if really needed.",
+    "Severity": 2,
+    "Scope": "Relationship",
+    "Expression": "CrossFilteringBehavior.ToString() == \"BothDirections\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_NO_FLOATING_POINT",
+    "Name": "Avoid floating-point data types",
+    "Category": "Performance",
+    "Description": "Use Fixed Decimal (decimal) for money and Int64 for counts. Floating point is only acceptable for coordinates.",
+    "Severity": 2,
+    "Scope": "DataColumn",
+    "Expression": "DataType.ToString() == \"Double\" and DataCategory != \"Latitude\" and DataCategory != \"Longitude\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_NUMERIC_ATTRIBUTES_NO_SUMMARIZE",
+    "Name": "Visible numeric columns must not summarise implicitly",
+    "Category": "Formatting",
+    "Description": "Attributes like Year or Age must not be summed by default. Aggregations belong in measures.",
+    "Severity": 3,
+    "Scope": "DataColumn, CalculatedColumn",
+    "Expression": "not IsHidden and not Table.IsHidden and SummarizeBy.ToString() != \"None\" and (DataType.ToString() == \"Int64\" or DataType.ToString() == \"Decimal\" or DataType.ToString() == \"Double\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_FRIENDLY_COLUMN_NAMES",
+    "Name": "Visible objects must use friendly names",
+    "Category": "Naming Conventions",
+    "Description": "Rename snake_case source columns in the model (sourceColumn keeps the warehouse name).",
+    "Severity": 2,
+    "Scope": "DataColumn, CalculatedColumn, Measure",
+    "Expression": "not IsHidden and not Table.IsHidden and Name.Contains(\"_\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_DATE_TABLE",
+    "Name": "The model must have a marked date table",
+    "Category": "DAX Expressions",
+    "Description": "Time-intelligence functions and the Time Intelligence calculation group need one.",
+    "Severity": 3,
+    "Scope": "Model",
+    "Expression": "not Tables.Any(DataCategory == \"Time\" and Columns.Any(IsKey and DataType.ToString() == \"DateTime\"))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_NO_AUTO_DATE_TABLES",
+    "Name": "Disable auto date/time",
+    "Category": "Performance",
+    "Description": "Auto date/time adds a hidden table per date column. Use the Date dimension instead.",
+    "Severity": 3,
+    "Scope": "Table, CalculatedTable",
+    "Expression": "Name.StartsWith(\"DateTableTemplate_\") or Name.StartsWith(\"LocalDateTable_\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_MONTH_SORT",
+    "Name": "Month and weekday names need a sort-by column",
+    "Category": "Formatting",
+    "Description": "Without it they sort alphabetically (April, August, ...).",
+    "Severity": 3,
+    "Scope": "DataColumn",
+    "Expression": "DataType.ToString() == \"String\" and (Name.Contains(\"Month\") or Name.Contains(\"Day of Week\")) and SortByColumn == null",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_DATE_FORMAT",
+    "Name": "Date columns must have a format string",
+    "Category": "Formatting",
+    "Description": "Avoids locale-dependent date rendering.",
+    "Severity": 2,
+    "Scope": "DataColumn",
+    "Expression": "DataType.ToString() == \"DateTime\" and string.IsNullOrWhitespace(FormatString)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_TABLE_DESCRIPTION",
+    "Name": "Tables should have a description",
+    "Category": "Maintenance",
+    "Description": "Explain grain and source (dbt model) for every table.",
+    "Severity": 2,
+    "Scope": "Table, CalculatedTable",
+    "Expression": "string.IsNullOrWhitespace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "CR_TRIM_NAMES",
+    "Name": "Object names must not start or end with a space",
+    "Category": "Naming Conventions",
+    "Description": "Leading/trailing spaces make DAX references error-prone.",
+    "Severity": 3,
+    "Scope": "Table, Measure, DataColumn, CalculatedColumn, Hierarchy",
+    "Expression": "Name.StartsWith(\" \") or Name.EndsWith(\" \")",
+    "CompatibilityLevel": 1200
+  }
+]

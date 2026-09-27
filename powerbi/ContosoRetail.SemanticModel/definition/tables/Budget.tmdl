@@ -1,0 +1,47 @@
+/// Monthly budget at category x store-country grain (dbt mart fct_sales_budget).
+/// Related to Product and Store through many-to-many relationships at that coarser grain.
+/// Use the [Budget Amount] measure, which blanks out below budget grain.
+table Budget
+	isHidden
+
+	column 'Month Start Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: month_start_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: category_key
+
+	column 'Store Country Code'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: store_country_code
+
+	column 'Budget Amount'
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00
+		summarizeBy: sum
+		sourceColumn: budget_amount_usd
+
+	partition Budget = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("fct_sales_budget"),
+				    Selected = Table.SelectColumns(Source, {"month_start_date", "category_key", "store_country_code", "budget_amount_usd"}, MissingField.Error),
+				    Typed = Table.TransformColumnTypes(Selected, {{"month_start_date", type date}, {"category_key", Int64.Type}, {"store_country_code", type text}, {"budget_amount_usd", Currency.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

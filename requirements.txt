@@ -1,0 +1,9 @@
+# Local pipeline + CI checks.  Install: pip install -r requirements.txt
+dbt-core~=1.12.0
+dbt-duckdb~=1.11.0
+duckdb~=1.5.0
+py7zr~=1.1          # extracts the SQLBI .7z release archives
+pyarrow>=21         # parquet I/O for fixtures and publishing
+jsonschema~=4.26    # PBIR / theme schema validation
+PyYAML~=6.0
+requests~=2.32

@@ -1,0 +1,28 @@
+/// RLS entitlements: which store countries each user may see (dbt mart security_user_access).
+/// Deliberately has no relationships; the 'Regional Manager' role reads it with USERPRINCIPALNAME().
+table 'Security Access'
+	isHidden
+
+	column 'User Principal Name'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: user_principal_name
+
+	column 'Country Code'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: country_code
+
+	partition 'Security Access' = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("security_user_access"),
+				    Typed = Table.TransformColumnTypes(Source, {{"user_principal_name", type text}, {"country_code", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,230 @@
+models:
+  # ---------------------------------------------------------------------------------------------
+  # Facts
+  # ---------------------------------------------------------------------------------------------
+  - name: fct_sales
+    description: Order lines. Grain = (order_key, line_number). Amounts in USD unless suffixed _local.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["order_key", "line_number"]
+    columns:
+      - name: order_key
+        data_type: bigint
+        constraints: [{ type: not_null }]
+      - name: line_number
+        data_type: integer
+        constraints: [{ type: not_null }]
+      - name: order_date
+        data_type: date
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date
+      - name: delivery_date
+        data_type: date
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date
+      - name: customer_key
+        data_type: integer
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: store_key
+        data_type: integer
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: store_key
+      - name: product_key
+        data_type: integer
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: currency_code
+        data_type: varchar
+        description: ISO currency of the order (derived from the customer's country).
+      - name: quantity
+        data_type: integer
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 1
+      - name: gross_amount_usd
+        data_type: decimal(18, 4)
+        description: quantity x list unit price (before discount).
+      - name: net_amount_usd
+        data_type: decimal(18, 4)
+        description: quantity x net unit price (after discount). This is "Sales Amount".
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+      - name: cost_amount_usd
+        data_type: decimal(18, 4)
+      - name: net_amount_local
+        data_type: decimal(18, 4)
+        description: Net amount converted to the order currency at the order-date exchange rate.
+      - name: delivery_days
+        data_type: integer
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 60
+
+  - name: fct_sales_budget
+    description: Synthetic monthly budget at category x store-country grain (see model header).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["month_start_date", "category_key", "store_country_code"]
+    columns:
+      - name: month_start_date
+        data_type: date
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date
+      - name: category_key
+        data_type: integer
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: category_key
+      - name: store_country_code
+        data_type: varchar
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: country_code
+      - name: budget_amount_usd
+        data_type: decimal(18, 4)
+
+  # ---------------------------------------------------------------------------------------------
+  # Dimensions
+  # ---------------------------------------------------------------------------------------------
+  - name: dim_date
+    description: Calendar covering complete years from first order to last delivery.
+    columns:
+      - { name: date, data_type: date, constraints: [{ type: not_null }], data_tests: [unique] }
+      - { name: date_key, data_type: integer }
+      - { name: year, data_type: integer }
+      - { name: quarter_number, data_type: integer }
+      - { name: quarter, data_type: varchar }
+      - { name: year_quarter, data_type: varchar }
+      - { name: year_quarter_number, data_type: integer }
+      - { name: month_number, data_type: integer }
+      - { name: month_name, data_type: varchar }
+      - { name: month_short, data_type: varchar }
+      - { name: year_month, data_type: varchar }
+      - { name: year_month_number, data_type: integer }
+      - { name: month_start_date, data_type: date }
+      - { name: day_of_week_number, data_type: integer }
+      - { name: day_of_week, data_type: varchar }
+      - { name: day_of_week_short, data_type: varchar }
+      - { name: day_of_month, data_type: integer }
+      - { name: iso_week_number, data_type: integer }
+      - { name: is_weekend, data_type: boolean }
+      - name: date_with_sales
+        data_type: boolean
+        description: True up to the last order date. Used by the Time Intelligence calculation group.
+
+  - name: dim_customer
+    columns:
+      - { name: customer_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
+      - { name: customer_name, data_type: varchar }
+      - { name: gender, data_type: varchar }
+      - { name: age, data_type: integer }
+      - { name: age_band, data_type: varchar }
+      - { name: age_band_sort, data_type: integer }
+      - { name: occupation, data_type: varchar }
+      - { name: city, data_type: varchar }
+      - { name: state_code, data_type: varchar }
+      - { name: state_name, data_type: varchar }
+      - { name: postal_code, data_type: varchar }
+      - { name: country_code, data_type: varchar }
+      - { name: country_name, data_type: varchar }
+      - { name: continent, data_type: varchar }
+      - { name: latitude, data_type: double }
+      - { name: longitude, data_type: double }
+      - name: first_order_date
+        data_type: date
+        description: Date of the customer's first order ever. Drives "New Customers".
+      - { name: acquisition_cohort, data_type: varchar }
+      - { name: has_purchased, data_type: boolean }
+
+  - name: dim_product
+    columns:
+      - { name: product_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
+      - { name: product_code, data_type: varchar }
+      - { name: product_name, data_type: varchar }
+      - { name: manufacturer, data_type: varchar }
+      - { name: brand, data_type: varchar }
+      - { name: color, data_type: varchar }
+      - { name: category_key, data_type: integer, constraints: [{ type: not_null }] }
+      - { name: category_name, data_type: varchar }
+      - { name: subcategory_key, data_type: integer }
+      - { name: subcategory_name, data_type: varchar }
+      - { name: list_price_usd, data_type: "decimal(18,4)" }
+      - { name: standard_cost_usd, data_type: "decimal(18,4)" }
+      - { name: price_band, data_type: varchar }
+      - { name: price_band_sort, data_type: integer }
+
+  - name: dim_store
+    columns:
+      - { name: store_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
+      - { name: store_code, data_type: integer }
+      - { name: store_name, data_type: varchar }
+      - name: channel
+        data_type: varchar
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Online", "Physical"]
+      - { name: country_code, data_type: varchar, constraints: [{ type: not_null }] }
+      - { name: country_name, data_type: varchar }
+      - { name: state_name, data_type: varchar }
+      - { name: open_date, data_type: date }
+      - { name: close_date, data_type: date }
+      - { name: square_meters, data_type: integer }
+      - { name: status, data_type: varchar }
+
+  - name: security_user_access
+    description: RLS entitlements (user principal name -> store country code).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ["user_principal_name", "country_code"]
+    columns:
+      - { name: user_principal_name, data_type: varchar, constraints: [{ type: not_null }] }
+      - name: country_code
+        data_type: varchar
+        constraints: [{ type: not_null }]
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: country_code
+              config:
+                severity: warn   # entitlements may list countries with no store yet

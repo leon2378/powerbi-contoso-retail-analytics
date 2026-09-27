@@ -1,0 +1,96 @@
+/// Stores (dbt mart dim_store), including the online store (Channel = Online, Country Code = ONLINE).
+/// Row-level security filters this table by Country Code.
+table Store
+
+	column 'Store Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: store_key
+
+	column 'Store Code'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: store_code
+
+	column 'Store Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: store_name
+
+	column Channel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: channel
+
+	column 'Country Code'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: country_code
+
+	column Country
+		dataType: string
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country_name
+
+	column State
+		dataType: string
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: state_name
+
+	column 'Open Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: open_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Close Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: close_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Square Meters'
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: square_meters
+
+	column Status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: status
+
+	hierarchy 'Store Hierarchy'
+
+		level Channel
+			column: Channel
+
+		level Country
+			column: Country
+
+		level State
+			column: State
+
+		level Store
+			column: 'Store Name'
+
+	partition Store = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("dim_store"),
+				    Typed = Table.TransformColumnTypes(Source, {{"store_key", Int64.Type}, {"store_code", Int64.Type}, {"store_name", type text}, {"channel", type text}, {"country_code", type text}, {"country_name", type text}, {"state_name", type text}, {"open_date", type date}, {"close_date", type date}, {"square_meters", Int64.Type}, {"status", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

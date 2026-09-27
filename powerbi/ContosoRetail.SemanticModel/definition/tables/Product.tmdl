@@ -1,0 +1,108 @@
+/// Products (dbt mart dim_product). Category is the budget grain.
+table Product
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: product_key
+
+	column 'Product Code'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: product_code
+
+	column 'Product Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: product_name
+
+	column Manufacturer
+		dataType: string
+		summarizeBy: none
+		sourceColumn: manufacturer
+
+	column Brand
+		dataType: string
+		summarizeBy: none
+		sourceColumn: brand
+
+	column Color
+		dataType: string
+		summarizeBy: none
+		sourceColumn: color
+
+	column 'Category Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: category_key
+
+	column Category
+		dataType: string
+		summarizeBy: none
+		sourceColumn: category_name
+
+	column 'Subcategory Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: subcategory_key
+
+	column Subcategory
+		dataType: string
+		summarizeBy: none
+		sourceColumn: subcategory_name
+
+	/// Current list price in USD (attribute, not additive).
+	column 'List Price'
+		dataType: decimal
+		formatString: \$#,0.00
+		summarizeBy: none
+		sourceColumn: list_price_usd
+
+	/// Current standard cost in USD (attribute, not additive).
+	column 'Standard Cost'
+		dataType: decimal
+		formatString: \$#,0.00
+		summarizeBy: none
+		sourceColumn: standard_cost_usd
+
+	column 'Price Band'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: price_band
+		sortByColumn: 'Price Band Sort'
+
+	column 'Price Band Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: price_band_sort
+
+	hierarchy 'Product Hierarchy'
+
+		level Category
+			column: Category
+
+		level Subcategory
+			column: Subcategory
+
+		level Product
+			column: 'Product Name'
+
+	partition Product = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("dim_product"),
+				    Typed = Table.TransformColumnTypes(Source, {{"product_key", Int64.Type}, {"product_code", type text}, {"product_name", type text}, {"manufacturer", type text}, {"brand", type text}, {"color", type text}, {"category_key", Int64.Type}, {"category_name", type text}, {"subcategory_key", Int64.Type}, {"subcategory_name", type text}, {"list_price_usd", Currency.Type}, {"standard_cost_usd", Currency.Type}, {"price_band", type text}, {"price_band_sort", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

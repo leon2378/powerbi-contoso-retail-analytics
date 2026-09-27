@@ -1,0 +1,384 @@
+# Data dictionary
+
+Generated from the semantic model by `scripts/generate_data_dictionary.py`. Do not edit by hand:
+change the `///` descriptions in the TMDL files instead.
+
+## Measures
+
+### Budget
+
+| Measure | Description | Format |
+|---|---|---|
+| **Budget Amount** | Budget in USD. The budget exists at month x category x store-country grain, so this returns BLANK whenever the report filters below that grain (single days, subcategories, products, stores or any customer attribute) rather than showing a misleading total. | `\$#,0` |
+| **Sales vs Budget** | Sales Amount minus Budget Amount. BLANK where no budget applies. | `\$#,0;-\$#,0;\$#,0` |
+| **Sales vs Budget %** | Variance to budget as a share of Budget Amount. | `+0.0%;-0.0%;0.0%` |
+
+<details><summary>DAX: Budget Amount</summary>
+
+```dax
+VAR _IsDateAtBudgetGrain =
+    COUNTROWS ( 'Date' )
+        = CALCULATE ( COUNTROWS ( 'Date' ), ALL ( 'Date' ), VALUES ( 'Date'[Year Month Number] ) )
+VAR _IsProductAtBudgetGrain =
+    COUNTROWS ( 'Product' )
+        = CALCULATE ( COUNTROWS ( 'Product' ), ALL ( 'Product' ), VALUES ( 'Product'[Category Key] ) )
+VAR _IsStoreAtBudgetGrain =
+    COUNTROWS ( Store )
+        = CALCULATE ( COUNTROWS ( Store ), ALL ( Store ), VALUES ( Store[Country Code] ) )
+VAR _IsCustomerUnfiltered =
+    NOT ISCROSSFILTERED ( Customer )
+RETURN
+    IF (
+        _IsDateAtBudgetGrain && _IsProductAtBudgetGrain && _IsStoreAtBudgetGrain && _IsCustomerUnfiltered,
+        SUM ( Budget[Budget Amount] )
+    )
+```
+
+</details>
+
+<details><summary>DAX: Sales vs Budget</summary>
+
+```dax
+VAR _Budget = [Budget Amount]
+RETURN
+    IF ( NOT ISBLANK ( _Budget ), [Sales Amount] - _Budget )
+```
+
+</details>
+
+<details><summary>DAX: Sales vs Budget %</summary>
+
+```dax
+VAR _Budget = [Budget Amount]
+RETURN
+    DIVIDE ( [Sales Amount] - _Budget, _Budget )
+```
+
+</details>
+
+### Delivery
+
+| Measure | Description | Format |
+|---|---|---|
+| **Avg Delivery Days** | Average days between order and delivery, per order line. | `0.0` |
+| **Sales Amount by Delivery Date** | Sales Amount by delivery date instead of order date (activates the inactive relationship). | `\$#,0` |
+
+<details><summary>DAX: Avg Delivery Days</summary>
+
+```dax
+AVERAGE ( Sales[Delivery Days] )
+```
+
+</details>
+
+<details><summary>DAX: Sales Amount by Delivery Date</summary>
+
+```dax
+CALCULATE (
+    [Sales Amount],
+    USERELATIONSHIP ( Sales[Delivery Date], 'Date'[Date] )
+)
+```
+
+</details>
+
+### Margin
+
+| Measure | Description | Format |
+|---|---|---|
+| **Total Cost** | Product cost of the units sold, in USD. | `\$#,0` |
+| **Margin** | Sales Amount minus Total Cost. | `\$#,0` |
+| **Margin %** | Margin as a share of Sales Amount. | `0.0%` |
+
+<details><summary>DAX: Total Cost</summary>
+
+```dax
+SUM ( Sales[Cost Amount] )
+```
+
+</details>
+
+<details><summary>DAX: Margin</summary>
+
+```dax
+[Sales Amount] - [Total Cost]
+```
+
+</details>
+
+<details><summary>DAX: Margin %</summary>
+
+```dax
+DIVIDE ( [Margin], [Sales Amount] )
+```
+
+</details>
+
+### Orders & Customers
+
+| Measure | Description | Format |
+|---|---|---|
+| **Orders** | Number of distinct orders. | `#,0` |
+| **Order Lines** | Number of order lines. | `#,0` |
+| **Avg Order Value** | Average net sales per order. | `\$#,0.00` |
+| **Customers** | Distinct customers who bought in the selected period. | `#,0` |
+| **New Customers** | Customers whose first-ever order falls inside the selected period. | `#,0` |
+| **Returning Customers** | Customers who bought in the period and had also bought before it. | `#,0` |
+| **Sales per Customer** | Average net sales per buying customer. | `\$#,0.00` |
+
+<details><summary>DAX: Orders</summary>
+
+```dax
+DISTINCTCOUNT ( Sales[Order Number] )
+```
+
+</details>
+
+<details><summary>DAX: Order Lines</summary>
+
+```dax
+COUNTROWS ( Sales )
+```
+
+</details>
+
+<details><summary>DAX: Avg Order Value</summary>
+
+```dax
+DIVIDE ( [Sales Amount], [Orders] )
+```
+
+</details>
+
+<details><summary>DAX: Customers</summary>
+
+```dax
+DISTINCTCOUNT ( Sales[Customer Key] )
+```
+
+</details>
+
+<details><summary>DAX: New Customers</summary>
+
+```dax
+CALCULATE (
+    [Customers],
+    TREATAS ( VALUES ( 'Date'[Date] ), Customer[First Order Date] )
+)
+```
+
+</details>
+
+<details><summary>DAX: Returning Customers</summary>
+
+```dax
+[Customers] - [New Customers]
+```
+
+</details>
+
+<details><summary>DAX: Sales per Customer</summary>
+
+```dax
+DIVIDE ( [Sales Amount], [Customers] )
+```
+
+</details>
+
+### Report Helpers
+
+| Measure | Description | Format |
+|---|---|---|
+| **Data Freshness** | Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters. |  |
+
+<details><summary>DAX: Data Freshness</summary>
+
+```dax
+VAR _LastOrderDate =
+    CALCULATE ( MAX ( Sales[Order Date] ), REMOVEFILTERS () )
+RETURN
+    "Data through " & FORMAT ( _LastOrderDate, "d mmm yyyy" )
+```
+
+</details>
+
+### Sales
+
+| Measure | Description | Format |
+|---|---|---|
+| **Sales Amount** | Net sales after discounts, in USD. The headline revenue KPI. | `\$#,0` |
+| **Gross Sales** | Sales at list price before discounts, in USD. | `\$#,0` |
+| **Discount Amount** | Value given away as discounts: Gross Sales minus Sales Amount. | `\$#,0` |
+| **Discount %** | Share of gross sales given away as discounts. | `0.0%` |
+| **Quantity** | Units sold. | `#,0` |
+| **Avg Selling Price** | Average net price per unit sold. | `\$#,0.00` |
+| **Sales Amount (Local Currency)** | Net sales in the order currency. Returns BLANK unless exactly one currency is in context, because amounts in different currencies cannot be added up. | dynamic |
+
+<details><summary>DAX: Sales Amount</summary>
+
+```dax
+SUM ( Sales[Net Amount] )
+```
+
+</details>
+
+<details><summary>DAX: Gross Sales</summary>
+
+```dax
+SUM ( Sales[Gross Amount] )
+```
+
+</details>
+
+<details><summary>DAX: Discount Amount</summary>
+
+```dax
+[Gross Sales] - [Sales Amount]
+```
+
+</details>
+
+<details><summary>DAX: Discount %</summary>
+
+```dax
+DIVIDE ( [Discount Amount], [Gross Sales] )
+```
+
+</details>
+
+<details><summary>DAX: Quantity</summary>
+
+```dax
+SUM ( Sales[Quantity] )
+```
+
+</details>
+
+<details><summary>DAX: Avg Selling Price</summary>
+
+```dax
+DIVIDE ( [Sales Amount], [Quantity] )
+```
+
+</details>
+
+<details><summary>DAX: Sales Amount (Local Currency)</summary>
+
+```dax
+IF (
+    HASONEVALUE ( Sales[Currency Code] ),
+    SUM ( Sales[Net Amount (Local)] )
+)
+```
+
+</details>
+
+## Tables
+
+### Sales
+
+Order lines (dbt mart fct_sales). Grain: one row per order line. Amounts in USD. Loaded with incremental refresh: yearly archive partitions plus monthly partitions for recent data.
+
+| Column | Type | Description |
+|---|---|---|
+| Order Number | int64 | Order number. Use it for detail tables and drill-through. |
+| Currency Code | string | ISO currency of the order. Filter to one currency to use [Sales Amount (Local Currency)]. |
+
+### Budget (hidden)
+
+Monthly budget at category x store-country grain (dbt mart fct_sales_budget). Related to Product and Store through many-to-many relationships at that coarser grain. Use the [Budget Amount] measure, which blanks out below budget grain.
+
+### Date
+
+Calendar (dbt mart dim_date), marked as the model's date table. Covers complete years.
+
+| Column | Type | Description |
+|---|---|---|
+| Date | dateTime |  |
+| Year | int64 |  |
+| Quarter | string |  |
+| Year Quarter | string |  |
+| Month | string |  |
+| Month Short | string |  |
+| Year Month | string |  |
+| Day of Week | string |  |
+| Day of Week Short | string |  |
+| Day of Month | int64 |  |
+| ISO Week | int64 |  |
+| Is Weekend | boolean |  |
+
+### Customer
+
+Customers (dbt mart dim_customer). Street-level PII is removed upstream.
+
+| Column | Type | Description |
+|---|---|---|
+| Customer Name | string |  |
+| Gender | string |  |
+| Age | int64 |  |
+| Age Band | string |  |
+| Occupation | string |  |
+| City | string |  |
+| State | string |  |
+| Postal Code | string |  |
+| Country | string |  |
+| Continent | string |  |
+| Latitude | double |  |
+| Longitude | double |  |
+| First Order Date | dateTime | Date of the customer's first order ever. Drives [New Customers]. |
+| Acquisition Cohort | string | Year of first purchase ("No purchase" for prospects). Use for cohort analysis. |
+| Has Purchased | boolean |  |
+
+### Product
+
+Products (dbt mart dim_product). Category is the budget grain.
+
+| Column | Type | Description |
+|---|---|---|
+| Product Code | string |  |
+| Product Name | string |  |
+| Manufacturer | string |  |
+| Brand | string |  |
+| Color | string |  |
+| Category | string |  |
+| Subcategory | string |  |
+| List Price | decimal | Current list price in USD (attribute, not additive). |
+| Standard Cost | decimal | Current standard cost in USD (attribute, not additive). |
+| Price Band | string |  |
+
+### Store
+
+Stores (dbt mart dim_store), including the online store (Channel = Online, Country Code = ONLINE). Row-level security filters this table by Country Code.
+
+| Column | Type | Description |
+|---|---|---|
+| Store Code | int64 |  |
+| Store Name | string |  |
+| Channel | string |  |
+| Country Code | string |  |
+| Country | string |  |
+| State | string |  |
+| Open Date | dateTime |  |
+| Close Date | dateTime |  |
+| Square Meters | int64 |  |
+| Status | string |  |
+
+### Time Intelligence
+
+Time-intelligence variants for any measure: put 'Time Calculation' on columns or in a slicer. Prior-year items only compare dates that have sales ('Date'[Date With Sales]), so a partial current year is compared like-for-like with the same span of the previous year.
+
+| Column | Type | Description |
+|---|---|---|
+| Time Calculation | string |  |
+
+### Metric Selector
+
+Field parameter: lets report users switch the measure shown by a visual with a slicer.
+
+| Column | Type | Description |
+|---|---|---|
+| Metric | string |  |
+
+### Security Access (hidden)
+
+RLS entitlements: which store countries each user may see (dbt mart security_user_access). Deliberately has no relationships; the 'Regional Manager' role reads it with USERPRINCIPALNAME().

@@ -1,0 +1,31 @@
+sources:
+  - name: contoso
+    description: >
+      Raw files from SQLBI's Contoso Data Generator V2 (ready-to-use Parquet release), staged by
+      scripts/download_contoso.py. Prices and costs are in USD; ExchangeRate converts USD into the
+      order's currency (CurrencyCode) on the order date.
+    config:
+      meta:
+        external_location: "{{ env_var('CONTOSO_RAW_DIR', 'data/raw') }}/{name}.parquet"
+    tables:
+      - name: sales
+        description: One row per order line.
+        columns:
+          - name: OrderKey
+            data_tests: [not_null]
+          - name: OrderDate
+            data_tests: [not_null]
+      - name: customer
+        description: Synthetic but realistic customers (names and addresses are fake).
+        columns:
+          - name: CustomerKey
+            data_tests: [not_null, unique]
+      - name: product
+        columns:
+          - name: ProductKey
+            data_tests: [not_null, unique]
+      - name: store
+        description: Physical stores plus a single online store (GeoAreaKey = -1).
+        columns:
+          - name: StoreKey
+            data_tests: [not_null, unique]

@@ -1,0 +1,182 @@
+/// Home table for all report measures. Combine them with the 'Time Intelligence'
+/// calculation group for MTD/QTD/YTD, prior-year and year-over-year variants.
+table _Measures
+
+	/// Net sales after discounts, in USD. The headline revenue KPI.
+	measure 'Sales Amount' = SUM ( Sales[Net Amount] )
+		formatString: \$#,0
+		displayFolder: Sales
+
+	/// Sales at list price before discounts, in USD.
+	measure 'Gross Sales' = SUM ( Sales[Gross Amount] )
+		formatString: \$#,0
+		displayFolder: Sales
+
+	/// Value given away as discounts: Gross Sales minus Sales Amount.
+	measure 'Discount Amount' = [Gross Sales] - [Sales Amount]
+		formatString: \$#,0
+		displayFolder: Sales
+
+	/// Share of gross sales given away as discounts.
+	measure 'Discount %' = DIVIDE ( [Discount Amount], [Gross Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+
+	/// Units sold.
+	measure Quantity = SUM ( Sales[Quantity] )
+		formatString: #,0
+		displayFolder: Sales
+
+	/// Average net price per unit sold.
+	measure 'Avg Selling Price' = DIVIDE ( [Sales Amount], [Quantity] )
+		formatString: \$#,0.00
+		displayFolder: Sales
+
+	/// Net sales in the order currency. Returns BLANK unless exactly one currency is in context,
+	/// because amounts in different currencies cannot be added up.
+	measure 'Sales Amount (Local Currency)' =
+			IF (
+			    HASONEVALUE ( Sales[Currency Code] ),
+			    SUM ( Sales[Net Amount (Local)] )
+			)
+		displayFolder: Sales
+
+		formatStringDefinition =
+				VAR _Currency = SELECTEDVALUE ( Sales[Currency Code], "" )
+				RETURN
+				    """" & _Currency & """ #,0"
+
+	/// Product cost of the units sold, in USD.
+	measure 'Total Cost' = SUM ( Sales[Cost Amount] )
+		formatString: \$#,0
+		displayFolder: Margin
+
+	/// Sales Amount minus Total Cost.
+	measure Margin = [Sales Amount] - [Total Cost]
+		formatString: \$#,0
+		displayFolder: Margin
+
+	/// Margin as a share of Sales Amount.
+	measure 'Margin %' = DIVIDE ( [Margin], [Sales Amount] )
+		formatString: 0.0%
+		displayFolder: Margin
+
+	/// Number of distinct orders.
+	measure Orders = DISTINCTCOUNT ( Sales[Order Number] )
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Number of order lines.
+	measure 'Order Lines' = COUNTROWS ( Sales )
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Average net sales per order.
+	measure 'Avg Order Value' = DIVIDE ( [Sales Amount], [Orders] )
+		formatString: \$#,0.00
+		displayFolder: Orders & Customers
+
+	/// Distinct customers who bought in the selected period.
+	measure Customers = DISTINCTCOUNT ( Sales[Customer Key] )
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Customers whose first-ever order falls inside the selected period.
+	measure 'New Customers' =
+			CALCULATE (
+			    [Customers],
+			    TREATAS ( VALUES ( 'Date'[Date] ), Customer[First Order Date] )
+			)
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Customers who bought in the period and had also bought before it.
+	measure 'Returning Customers' = [Customers] - [New Customers]
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Average net sales per buying customer.
+	measure 'Sales per Customer' = DIVIDE ( [Sales Amount], [Customers] )
+		formatString: \$#,0.00
+		displayFolder: Orders & Customers
+
+	/// Average days between order and delivery, per order line.
+	measure 'Avg Delivery Days' = AVERAGE ( Sales[Delivery Days] )
+		formatString: 0.0
+		displayFolder: Delivery
+
+	/// Sales Amount by delivery date instead of order date (activates the inactive relationship).
+	measure 'Sales Amount by Delivery Date' =
+			CALCULATE (
+			    [Sales Amount],
+			    USERELATIONSHIP ( Sales[Delivery Date], 'Date'[Date] )
+			)
+		formatString: \$#,0
+		displayFolder: Delivery
+
+	/// Budget in USD. The budget exists at month x category x store-country grain, so this returns
+	/// BLANK whenever the report filters below that grain (single days, subcategories, products,
+	/// stores or any customer attribute) rather than showing a misleading total.
+	measure 'Budget Amount' =
+			VAR _IsDateAtBudgetGrain =
+			    COUNTROWS ( 'Date' )
+			        = CALCULATE ( COUNTROWS ( 'Date' ), ALL ( 'Date' ), VALUES ( 'Date'[Year Month Number] ) )
+			VAR _IsProductAtBudgetGrain =
+			    COUNTROWS ( 'Product' )
+			        = CALCULATE ( COUNTROWS ( 'Product' ), ALL ( 'Product' ), VALUES ( 'Product'[Category Key] ) )
+			VAR _IsStoreAtBudgetGrain =
+			    COUNTROWS ( Store )
+			        = CALCULATE ( COUNTROWS ( Store ), ALL ( Store ), VALUES ( Store[Country Code] ) )
+			VAR _IsCustomerUnfiltered =
+			    NOT ISCROSSFILTERED ( Customer )
+			RETURN
+			    IF (
+			        _IsDateAtBudgetGrain && _IsProductAtBudgetGrain && _IsStoreAtBudgetGrain && _IsCustomerUnfiltered,
+			        SUM ( Budget[Budget Amount] )
+			    )
+		formatString: \$#,0
+		displayFolder: Budget
+
+	/// Sales Amount minus Budget Amount. BLANK where no budget applies.
+	measure 'Sales vs Budget' =
+			VAR _Budget = [Budget Amount]
+			RETURN
+			    IF ( NOT ISBLANK ( _Budget ), [Sales Amount] - _Budget )
+		formatString: \$#,0;-\$#,0;\$#,0
+		displayFolder: Budget
+
+	/// Variance to budget as a share of Budget Amount.
+	measure 'Sales vs Budget %' =
+			VAR _Budget = [Budget Amount]
+			RETURN
+			    DIVIDE ( [Sales Amount] - _Budget, _Budget )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Budget
+
+	/// Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters.
+	measure 'Data Freshness' =
+			VAR _LastOrderDate =
+			    CALCULATE ( MAX ( Sales[Order Date] ), REMOVEFILTERS () )
+			RETURN
+			    "Data through " & FORMAT ( _LastOrderDate, "d mmm yyyy" )
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	column Placeholder
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = Int64.Type], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

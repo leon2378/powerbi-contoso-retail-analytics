@@ -1,0 +1,8 @@
+# Paths are relative to the directory dbt is launched from (the repo root; see tasks.ps1).
+contoso_retail:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', 'data/warehouse/contoso.duckdb') }}"
+      threads: 4

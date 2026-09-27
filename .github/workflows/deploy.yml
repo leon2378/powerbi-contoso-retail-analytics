@@ -1,0 +1,79 @@
+name: Deploy to Fabric
+
+# DEV deploys automatically from main. TEST and PROD are promoted manually, and each GitHub
+# Environment can require reviewers, so PROD needs an approval.
+#
+# One-time setup (see docs/deployment.md):
+#   Repository variable:  FABRIC_ENABLED = true
+#   Per GitHub Environment (DEV, TEST, PROD):
+#     variables: FABRIC_WORKSPACE_ID, FABRIC_LAKEHOUSE_NAME (optional), FABRIC_CONNECTION_ID (optional),
+#                CONTOSO_SIZE (optional: 100k | 1m | 10m)
+#     secrets:   AZURE_CLIENT_ID, AZURE_TENANT_ID (federated credential for OIDC, no client secret)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [DEV, TEST, PROD]
+        default: DEV
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    if: vars.FABRIC_ENABLED == 'true'
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'DEV' }}
+    concurrency:
+      group: deploy-${{ inputs.environment || 'DEV' }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # OIDC federation with Microsoft Entra ID
+    env:
+      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_NAME: ${{ vars.FABRIC_LAKEHOUSE_NAME || 'lh_contoso' }}
+      FABRIC_CONNECTION_ID: ${{ vars.FABRIC_CONNECTION_ID }}
+      CONTOSO_SIZE: ${{ vars.CONTOSO_SIZE || '1m' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt -r requirements-fabric.txt
+
+      - uses: actions/cache@v6
+        with:
+          path: data/downloads
+          key: contoso-${{ env.CONTOSO_SIZE }}
+
+      - name: Extract and transform (Contoso release -> dbt marts)
+        run: |
+          python scripts/download_contoso.py --size "$CONTOSO_SIZE"
+          mkdir -p data/marts data/warehouse
+          dbt build --project-dir transform --profiles-dir transform
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Publish data, deploy model + report, refresh
+        run: >
+          python scripts/deploy_fabric.py
+          --environment "${{ inputs.environment || 'DEV' }}"
+          --publish-data
+          --refresh

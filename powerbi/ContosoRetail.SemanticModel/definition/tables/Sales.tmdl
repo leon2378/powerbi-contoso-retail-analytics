@@ -1,0 +1,134 @@
+/// Order lines (dbt mart fct_sales). Grain: one row per order line. Amounts in USD.
+/// Loaded with incremental refresh: yearly archive partitions plus monthly partitions for recent data.
+table Sales
+
+	refreshPolicy
+		policyType: basic
+		rollingWindowGranularity: year
+		rollingWindowPeriods: 15
+		incrementalGranularity: month
+		incrementalPeriods: 3
+		sourceExpression =
+				let
+				    Source = fnLoadTable("fct_sales"),
+				    Selected = Table.SelectColumns(Source, {"order_key", "line_number", "order_date", "delivery_date", "customer_key", "store_key", "product_key", "currency_code", "quantity", "gross_amount_usd", "net_amount_usd", "cost_amount_usd", "net_amount_local", "delivery_days"}, MissingField.Error),
+				    Windowed = Table.SelectRows(Selected, each [order_date] >= Date.From(RangeStart) and [order_date] < Date.From(RangeEnd)),
+				    Typed = Table.TransformColumnTypes(Windowed, {{"order_key", Int64.Type}, {"line_number", Int64.Type}, {"order_date", type date}, {"delivery_date", type date}, {"customer_key", Int64.Type}, {"store_key", Int64.Type}, {"product_key", Int64.Type}, {"currency_code", type text}, {"quantity", Int64.Type}, {"gross_amount_usd", Currency.Type}, {"net_amount_usd", Currency.Type}, {"cost_amount_usd", Currency.Type}, {"net_amount_local", Currency.Type}, {"delivery_days", Int64.Type}})
+				in
+				    Typed
+
+	/// Order number. Use it for detail tables and drill-through.
+	column 'Order Number'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: order_key
+
+	column 'Line Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: line_number
+
+	column 'Order Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: order_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Used through an inactive relationship by [Sales Amount by Delivery Date].
+	column 'Delivery Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: delivery_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: customer_key
+
+	column 'Store Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: store_key
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: product_key
+
+	/// ISO currency of the order. Filter to one currency to use [Sales Amount (Local Currency)].
+	column 'Currency Code'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: currency_code
+
+	column Quantity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		summarizeBy: sum
+		sourceColumn: quantity
+
+	column 'Gross Amount'
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00
+		summarizeBy: sum
+		sourceColumn: gross_amount_usd
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00
+		summarizeBy: sum
+		sourceColumn: net_amount_usd
+
+	column 'Cost Amount'
+		dataType: decimal
+		isHidden
+		formatString: \$#,0.00
+		summarizeBy: sum
+		sourceColumn: cost_amount_usd
+
+	column 'Net Amount (Local)'
+		dataType: decimal
+		isHidden
+		formatString: #,0.00
+		summarizeBy: sum
+		sourceColumn: net_amount_local
+
+	column 'Delivery Days'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: delivery_days
+
+	partition Sales = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("fct_sales"),
+				    Selected = Table.SelectColumns(Source, {"order_key", "line_number", "order_date", "delivery_date", "customer_key", "store_key", "product_key", "currency_code", "quantity", "gross_amount_usd", "net_amount_usd", "cost_amount_usd", "net_amount_local", "delivery_days"}, MissingField.Error),
+				    Windowed = Table.SelectRows(Selected, each [order_date] >= Date.From(RangeStart) and [order_date] < Date.From(RangeEnd)),
+				    Typed = Table.TransformColumnTypes(Windowed, {{"order_key", Int64.Type}, {"line_number", Int64.Type}, {"order_date", type date}, {"delivery_date", type date}, {"customer_key", Int64.Type}, {"store_key", Int64.Type}, {"product_key", Int64.Type}, {"currency_code", type text}, {"quantity", Int64.Type}, {"gross_amount_usd", Currency.Type}, {"net_amount_usd", Currency.Type}, {"cost_amount_usd", Currency.Type}, {"net_amount_local", Currency.Type}, {"delivery_days", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

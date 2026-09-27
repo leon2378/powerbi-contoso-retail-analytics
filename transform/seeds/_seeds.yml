@@ -1,0 +1,19 @@
+seeds:
+  - name: budget_growth_targets
+    description: >
+      Year-over-year growth target per product category, applied to prior-year actuals to build
+      fct_sales_budget. Owned by Finance; categories not listed fall back to var default_budget_growth.
+    columns:
+      - name: category_name
+        data_tests: [not_null, unique]
+      - name: growth_rate
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: -0.5
+                max_value: 1
+
+  - name: rls_user_access
+    description: >
+      Demo entitlements for the "Regional Manager" RLS role. Replace the example.com UPNs with real
+      Microsoft Entra user principal names before testing in the Power BI service.

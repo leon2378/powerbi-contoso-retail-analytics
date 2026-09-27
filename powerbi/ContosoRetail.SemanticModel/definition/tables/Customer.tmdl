@@ -1,0 +1,144 @@
+/// Customers (dbt mart dim_customer). Street-level PII is removed upstream.
+table Customer
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: customer_key
+
+	column 'Customer Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: customer_name
+
+	column Gender
+		dataType: string
+		summarizeBy: none
+		sourceColumn: gender
+
+	column Age
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: age
+
+	column 'Age Band'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: age_band
+		sortByColumn: 'Age Band Sort'
+
+	column 'Age Band Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: age_band_sort
+
+	column Occupation
+		dataType: string
+		summarizeBy: none
+		sourceColumn: occupation
+
+	column City
+		dataType: string
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: city
+
+	column 'State Code'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: state_code
+
+	column State
+		dataType: string
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: state_name
+
+	column 'Postal Code'
+		dataType: string
+		dataCategory: PostalCode
+		summarizeBy: none
+		sourceColumn: postal_code
+
+	column 'Country Code'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: country_code
+
+	column Country
+		dataType: string
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country_name
+
+	column Continent
+		dataType: string
+		dataCategory: Continent
+		summarizeBy: none
+		sourceColumn: continent
+
+	column Latitude
+		dataType: double
+		dataCategory: Latitude
+		summarizeBy: none
+		sourceColumn: latitude
+
+	column Longitude
+		dataType: double
+		dataCategory: Longitude
+		summarizeBy: none
+		sourceColumn: longitude
+
+	/// Date of the customer's first order ever. Drives [New Customers].
+	column 'First Order Date'
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: first_order_date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Year of first purchase ("No purchase" for prospects). Use for cohort analysis.
+	column 'Acquisition Cohort'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: acquisition_cohort
+
+	column 'Has Purchased'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		summarizeBy: none
+		sourceColumn: has_purchased
+
+	hierarchy Geography
+
+		level Continent
+			column: Continent
+
+		level Country
+			column: Country
+
+		level State
+			column: State
+
+		level City
+			column: City
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source = fnLoadTable("dim_customer"),
+				    Typed = Table.TransformColumnTypes(Source, {{"customer_key", Int64.Type}, {"customer_name", type text}, {"gender", type text}, {"age", Int64.Type}, {"age_band", type text}, {"age_band_sort", Int64.Type}, {"occupation", type text}, {"city", type text}, {"state_code", type text}, {"state_name", type text}, {"postal_code", type text}, {"country_code", type text}, {"country_name", type text}, {"continent", type text}, {"latitude", type number}, {"longitude", type number}, {"first_order_date", type date}, {"acquisition_cohort", type text}, {"has_purchased", type logical}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

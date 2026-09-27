@@ -1,0 +1,35 @@
+relationship sales_order_date__date
+	fromColumn: Sales.'Order Date'
+	toColumn: Date.Date
+
+relationship sales_delivery_date__date
+	isActive: false
+	fromColumn: Sales.'Delivery Date'
+	toColumn: Date.Date
+
+relationship sales_customer_key__customer
+	fromColumn: Sales.'Customer Key'
+	toColumn: Customer.'Customer Key'
+
+relationship sales_product_key__product
+	fromColumn: Sales.'Product Key'
+	toColumn: Product.'Product Key'
+
+relationship sales_store_key__store
+	fromColumn: Sales.'Store Key'
+	toColumn: Store.'Store Key'
+
+relationship budget_month__date
+	fromColumn: Budget.'Month Start Date'
+	toColumn: Date.Date
+
+relationship budget_category__product
+	toCardinality: many
+	fromColumn: Budget.'Category Key'
+	toColumn: Product.'Category Key'
+
+relationship budget_country__store
+	toCardinality: many
+	fromColumn: Budget.'Store Country Code'
+	toColumn: Store.'Country Code'
+

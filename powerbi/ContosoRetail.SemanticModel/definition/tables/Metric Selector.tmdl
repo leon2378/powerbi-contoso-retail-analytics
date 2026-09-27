@@ -1,0 +1,40 @@
+/// Field parameter: lets report users switch the measure shown by a visual with a slicer.
+table 'Metric Selector'
+
+	column Metric
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Metric Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Metric Fields'
+
+	column 'Metric Fields'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Metric Order'
+
+		extendedProperty ParameterMetadata = {"version":3,"kind":2}
+
+	column 'Metric Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Value3]
+
+	partition 'Metric Selector' = calculated
+		mode: import
+		source =
+				{
+				    ("Sales Amount", NAMEOF ( '_Measures'[Sales Amount] ), 0),
+				    ("Margin", NAMEOF ( '_Measures'[Margin] ), 1),
+				    ("Margin %", NAMEOF ( '_Measures'[Margin %] ), 2),
+				    ("Orders", NAMEOF ( '_Measures'[Orders] ), 3),
+				    ("Customers", NAMEOF ( '_Measures'[Customers] ), 4),
+				    ("Avg Order Value", NAMEOF ( '_Measures'[Avg Order Value] ), 5)
+				}
+

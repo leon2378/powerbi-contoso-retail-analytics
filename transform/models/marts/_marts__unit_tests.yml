@@ -1,0 +1,54 @@
+unit_tests:
+  - name: fct_sales_computes_line_amounts
+    description: Line amounts are quantity x unit values; local amount applies the order FX rate.
+    model: fct_sales
+    given:
+      - input: ref('stg_contoso__sales')
+        rows:
+          - order_key: 1
+            line_number: 0
+            order_date: "2024-01-01"
+            delivery_date: "2024-01-04"
+            customer_key: 10
+            store_key: 20
+            product_key: 30
+            quantity: 3
+            unit_price_usd: 100.00
+            net_price_usd: 90.00
+            unit_cost_usd: 40.00
+            currency_code: EUR
+            exchange_rate: 0.9
+    expect:
+      rows:
+        - order_key: 1
+          gross_amount_usd: 300.00
+          net_amount_usd: 270.00
+          cost_amount_usd: 120.00
+          net_amount_local: 243.00
+          delivery_days: 3
+
+  - name: fct_sales_budget_applies_growth_to_prior_year
+    description: Budget = same month last year x (1 + category growth); falls back to the default.
+    model: fct_sales_budget
+    given:
+      - input: ref('fct_sales')
+        rows:
+          - { order_date: "2023-03-15", product_key: 1, store_key: 1, net_amount_usd: 1000.00 }
+          - { order_date: "2023-03-20", product_key: 2, store_key: 1, net_amount_usd: 500.00 }
+      - input: ref('dim_product')
+        rows:
+          - { product_key: 1, category_key: 1, category_name: Audio }
+          - { product_key: 2, category_key: 9, category_name: Unlisted Category }
+      - input: ref('dim_store')
+        rows:
+          - { store_key: 1, country_code: DE }
+      - input: ref('budget_growth_targets')
+        rows:
+          - { category_name: Audio, growth_rate: 0.10 }
+      - input: ref('dim_date')
+        rows:
+          - { date: "2024-12-31" }
+    expect:
+      rows:
+        - { month_start_date: "2024-03-01", category_key: 1, store_country_code: DE, budget_amount_usd: 1100.00 }
+        - { month_start_date: "2024-03-01", category_key: 9, store_country_code: DE, budget_amount_usd: 515.00 }

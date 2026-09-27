@@ -2,15 +2,15 @@
 
 The report is 1280 × 720, built on a 16 px grid, with the **Contoso Executive** theme
 (`StaticResources/RegisteredResources/ContosoExecutive.json`). The first page, **Executive Overview**, is
-already built, and so is **Sales Performance**. The pages below are the plan for the rest of the report.
+already built, and so are **Sales Performance** and **Customers**. The pages below are the plan for the rest of the report.
 
 ## Page plan
 
 | Page | Question it answers | Suggested visuals | Model features it shows off |
 |---|---|---|---|
 | **Executive Overview** ✅ | How are we doing vs last year and vs budget? | KPI cards, sales vs budget trend, category YoY matrix, country bars | Time Intelligence calc group, grain-aware budget |
-| **Sales Performance** ✅ | What drives revenue? | Metric tiles (**Metric Selector** field parameter) and a time-calculation dropdown drive a monthly trend, year × channel columns and a weekday profile; brand table; axis titles name the selected metric | Field parameter, calc group in a slicer, slicers synced across pages |
-| **Customers** | Are we acquiring and keeping customers? | New vs returning (stacked columns by month), cohort matrix (*Acquisition Cohort* × *Year*, value *Customers*), age band × gender | `New Customers`, cohort attribute |
+| **Sales Performance** ✅ | What drives revenue? | Metric tiles (**Metric Selector** field parameter) and a time-calculation dropdown drive a monthly trend, year × channel columns and a weekday profile; brand table; dynamic titles name the selected metric and time calculation | Field parameter, calc group in a slicer, slicers synced across pages |
+| **Customers** ✅ | Are we acquiring and keeping customers? | KPI cards (Customers, Repeat Customer %, Orders and Sales per Customer), new vs returning by year, cohort retention heatmap (Acquisition Cohort × Year), age band × gender, customers by country | `New Customers`, `Cohort Retention %`, conditional-formatting colour scale |
 | **Products** | What sells, at what price and margin? | Scatter of Sales Amount vs Margin % per subcategory, price-band mix, top-N products table | Price bands, margin measures |
 | **Stores & Channels** | Where do we sell? | Map by store country (bubble size = Sales Amount), online vs physical trend, store table with open/close dates | Store hierarchy, RLS (test with *View as*) |
 | **Budget Variance** | Where are we off plan? | Waterfall of *Sales vs Budget* by category, matrix month × category with conditional formatting on *Sales vs Budget %* | Many-to-many budget relationships |
@@ -58,14 +58,19 @@ Taken from a validated, colour-vision-deficiency-checked palette:
 - [ ] Check the model size with VertiPaq Analyzer (DAX Studio). `Sales[Order Number]` is the largest column; keep it
       only while drill-to-order is needed.
 
-## Known limitations
+## Working with the project outside Desktop
 
-- **No measure-driven visual titles.** Once a model has a calculation group, Power BI treats every measure as
-  the Variant data type, and Desktop does not evaluate visual titles bound to measures in this model (confirmed
-  from the engine trace: the title measures were never queried). The Sales Performance page therefore uses
-  static titles, and the value-axis title shows the metric the field parameter resolved to. The Time
-  Intelligence items still pass text measures through unchanged (`ISNUMBER` guard) so label measures such as
-  `[Data Freshness]` keep working in cards.
+These are lessons from building this report by editing TMDL/PBIR files directly:
+
+- **Fully restart Power BI Desktop after editing model files.** Reopening the project inside a running
+  Desktop session reloads the engine, but the report layer can keep its old field list. New measures then
+  evaluate in DAX but are silently dropped from visuals, and measure-driven titles don't render. Close the
+  whole app, then open the `.pbip` again.
+- **Every model object needs a `lineageTag`.** Desktop adds them on save; hand-written objects don't have
+  one. `python scripts/add_lineage_tags.py` adds stable tags, and CI fails if any are missing.
 - **Field parameter display columns.** `SELECTEDVALUE('Metric Selector'[Metric])` raises a composite-key error
   because the display column is grouped with the hidden fields column. Read both columns together
-  (`SUMMARIZE('Metric Selector', [Metric], [Metric Fields])`) if you need the selected metric's name in DAX.
+  (`SUMMARIZE('Metric Selector', [Metric], [Metric Fields])`), as `[Selected Metric Label]` does.
+- **Calculation groups make every measure Variant.** Text measures (labels, dynamic titles) still work, as
+  long as calculation items that do arithmetic pass non-numeric values through (the `ISNUMBER` guard in
+  *YoY* and *YoY %*).

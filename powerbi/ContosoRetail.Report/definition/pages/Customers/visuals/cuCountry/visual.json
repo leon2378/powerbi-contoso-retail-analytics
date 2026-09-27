@@ -1,34 +1,39 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
-  "name": "spBrands",
+  "name": "cuCountry",
   "position": {
     "x": 800,
-    "y": 152,
-    "z": 9000,
-    "height": 336,
+    "y": 432,
+    "z": 10000,
+    "height": 276,
     "width": 464,
-    "tabOrder": 9000
+    "tabOrder": 10000
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
-        "Values": {
+        "Category": {
           "projections": [
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Product"
+                      "Entity": "Customer"
                     }
                   },
-                  "Property": "Brand"
+                  "Property": "Country"
                 }
               },
-              "queryRef": "Product.Brand",
-              "nativeQueryRef": "Brand"
-            },
+              "queryRef": "Customer.Country",
+              "nativeQueryRef": "Country",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -37,39 +42,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Sales Amount"
+                  "Property": "Customers"
                 }
               },
-              "queryRef": "_Measures.Sales Amount",
-              "nativeQueryRef": "Sales Amount"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Margin %"
-                }
-              },
-              "queryRef": "_Measures.Margin %",
-              "nativeQueryRef": "Margin %"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Orders"
-                }
-              },
-              "queryRef": "_Measures.Orders",
-              "nativeQueryRef": "Orders"
+              "queryRef": "_Measures.Customers",
+              "nativeQueryRef": "Customers"
             }
           ]
         }
@@ -84,7 +61,7 @@
                     "Entity": "_Measures"
                   }
                 },
-                "Property": "Sales Amount"
+                "Property": "Customers"
               }
             },
             "direction": "Descending"
@@ -93,13 +70,46 @@
       }
     },
     "objects": {
-      "columnHeaders": [
+      "valueAxis": [
         {
           "properties": {
-            "columnAdjustment": {
+            "show": {
               "expr": {
                 "Literal": {
-                  "Value": "'growToFit'"
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "categoryAxis": [
+        {
+          "properties": {
+            "preferredCategoryWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "16D"
+                }
+              }
+            },
+            "innerPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "25D"
                 }
               }
             }
@@ -120,13 +130,8 @@
             },
             "text": {
               "expr": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Title Brand Performance"
+                "Literal": {
+                  "Value": "'Customers by country'"
                 }
               }
             }

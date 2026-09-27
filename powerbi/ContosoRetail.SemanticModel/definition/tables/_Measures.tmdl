@@ -118,6 +118,46 @@ table _Measures
 		displayFolder: Orders & Customers
 		lineageTag: 62cc77b7-356b-4aeb-9b06-c4052d89fec5
 
+	/// Share of buying customers who placed two or more orders in the selected period.
+	/// Meaningful at any grain, unlike new/returning, where every customer is "new" over all time.
+	measure 'Repeat Customer %' =
+			VAR _RepeatCustomers =
+			    COUNTROWS ( FILTER ( VALUES ( Sales[Customer Key] ), [Orders] > 1 ) )
+			RETURN
+			    DIVIDE ( _RepeatCustomers, [Customers] )
+		lineageTag: 44c85cdf-58c6-53f3-b826-6bc20b4b17c5
+		formatString: 0.0%
+		displayFolder: Orders & Customers
+
+	/// Average number of orders per buying customer in the selected period.
+	measure 'Orders per Customer' = DIVIDE ( [Orders], [Customers] )
+		lineageTag: 5d898a48-e8d5-5058-bb2e-306abc8ccca1
+		formatString: 0.00
+		displayFolder: Orders & Customers
+
+	/// Customers acquired in the cohort year in context (Customer[Acquisition Cohort]), counted over
+	/// that whole year regardless of the date filter. BLANK unless exactly one cohort is in context.
+	measure 'Cohort Size' =
+			VAR _Cohort = SELECTEDVALUE ( Customer[Acquisition Cohort] )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( _Cohort ) && _Cohort <> "No purchase",
+			        CALCULATE ( [Customers], REMOVEFILTERS ( 'Date' ), 'Date'[Year] = VALUE ( _Cohort ) )
+			    )
+		lineageTag: 6eb582fb-c6bc-51ca-924e-c00369d2b489
+		formatString: #,0
+		displayFolder: Orders & Customers
+
+	/// Share of a cohort's customers who bought in the selected period: [Customers] / [Cohort Size].
+	/// Put Acquisition Cohort on rows and Year on columns for a retention triangle.
+	measure 'Cohort Retention %' =
+			VAR _ActiveCustomers = [Customers]
+			RETURN
+			    IF ( NOT ISBLANK ( _ActiveCustomers ), DIVIDE ( _ActiveCustomers, [Cohort Size] ) )
+		lineageTag: 6ff8ac82-28ce-55b1-9da1-8c6187f05298
+		formatString: 0.0%
+		displayFolder: Orders & Customers
+
 	/// Average days between order and delivery, per order line.
 	measure 'Avg Delivery Days' = AVERAGE ( Sales[Delivery Days] )
 		formatString: 0.0
@@ -168,6 +208,7 @@ table _Measures
 			    ),
 			    [Budget Amount]
 			)
+		lineageTag: 52c19d50-57c5-55be-9de5-1381ad8e53f7
 		formatString: \$#,0
 		displayFolder: Budget
 
@@ -178,6 +219,7 @@ table _Measures
 			    [Sales Amount],
 			    FILTER ( VALUES ( 'Date'[Year Month Number] ), NOT ISBLANK ( [Budget Amount] ) )
 			)
+		lineageTag: b2e9ff4d-e760-5b09-8df3-263aeb0059c9
 		formatString: \$#,0
 		displayFolder: Budget
 
@@ -208,6 +250,60 @@ table _Measures
 			    "Data through " & FORMAT ( _LastOrderDate, "d mmm yyyy" )
 		displayFolder: Report Helpers
 		lineageTag: acf75dc2-19e8-4b97-81b6-8da17842f47b
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// " (YTD)"-style suffix naming the selected Time Intelligence item; BLANK for Current.
+	measure 'Selected Time Calculation Suffix' =
+			VAR _TimeCalculation = SELECTEDVALUE ( 'Time Intelligence'[Time Calculation], "Current" )
+			RETURN
+			    IF ( _TimeCalculation <> "Current", " (" & _TimeCalculation & ")" )
+		lineageTag: b7741e85-b86b-5a2b-8808-9f8f9e4b4907
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Name of the metric picked in the Metric Selector field parameter plus the time calculation,
+	/// e.g. "Margin % (YTD)". Used for dynamic visual titles.
+	measure 'Selected Metric Label' =
+			// A field parameter's display column forms a composite key with its hidden fields column,
+			// so SELECTEDVALUE/VALUES on [Metric] alone raises an error. Read both columns together.
+			VAR _Selected =
+			    SUMMARIZE ( 'Metric Selector', 'Metric Selector'[Metric], 'Metric Selector'[Metric Fields] )
+			VAR _Metric =
+			    IF ( COUNTROWS ( _Selected ) = 1, MAXX ( _Selected, 'Metric Selector'[Metric] ), "Sales Amount" )
+			RETURN
+			    _Metric & [Selected Time Calculation Suffix]
+		lineageTag: 31b04b6d-e475-5b28-b4d5-a05f26fb13a3
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Dynamic title for the year x channel chart on the Sales Performance page.
+	measure 'Title Metric by Year and Channel' = [Selected Metric Label] & " by year and channel"
+		lineageTag: 8fc99dec-21d7-59a4-b605-d6d61ceba3ec
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Dynamic title for the weekday chart on the Sales Performance page.
+	measure 'Title Metric by Weekday' = [Selected Metric Label] & " by weekday"
+		lineageTag: 3b233ea0-e0f2-5634-bec1-1e243daa75e3
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Dynamic title for the brand table on the Sales Performance page (names the time calculation).
+	measure 'Title Brand Performance' = "Brand performance" & [Selected Time Calculation Suffix]
+		lineageTag: be6e1115-c0a6-579e-aabe-94913b63688c
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Dynamic title for the monthly trend on the Sales Performance page.
+	measure 'Title Metric by Month' = [Selected Metric Label] & " by month"
+		lineageTag: b8fe1f0f-ea1c-56c0-a2db-d187fe9c9a0e
+		displayFolder: Report Helpers
 
 		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
 

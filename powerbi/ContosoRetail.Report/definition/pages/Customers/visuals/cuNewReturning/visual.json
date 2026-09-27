@@ -1,33 +1,52 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
-  "name": "spBrands",
+  "name": "cuNewReturning",
   "position": {
-    "x": 800,
-    "y": 152,
-    "z": 9000,
-    "height": 336,
-    "width": 464,
-    "tabOrder": 9000
+    "x": 16,
+    "y": 180,
+    "z": 7000,
+    "height": 240,
+    "width": 768,
+    "tabOrder": 7000
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "columnChart",
     "query": {
       "queryState": {
-        "Values": {
+        "Category": {
           "projections": [
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Product"
+                      "Entity": "Date"
                     }
                   },
-                  "Property": "Brand"
+                  "Property": "Year"
                 }
               },
-              "queryRef": "Product.Brand",
-              "nativeQueryRef": "Brand"
+              "queryRef": "Date.Year",
+              "nativeQueryRef": "Year",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "New Customers"
+                }
+              },
+              "queryRef": "_Measures.New Customers",
+              "nativeQueryRef": "New Customers"
             },
             {
               "field": {
@@ -37,39 +56,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Sales Amount"
+                  "Property": "Returning Customers"
                 }
               },
-              "queryRef": "_Measures.Sales Amount",
-              "nativeQueryRef": "Sales Amount"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Margin %"
-                }
-              },
-              "queryRef": "_Measures.Margin %",
-              "nativeQueryRef": "Margin %"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Orders"
-                }
-              },
-              "queryRef": "_Measures.Orders",
-              "nativeQueryRef": "Orders"
+              "queryRef": "_Measures.Returning Customers",
+              "nativeQueryRef": "Returning Customers"
             }
           ]
         }
@@ -78,28 +69,48 @@
         "sort": [
           {
             "field": {
-              "Measure": {
+              "Column": {
                 "Expression": {
                   "SourceRef": {
-                    "Entity": "_Measures"
+                    "Entity": "Date"
                   }
                 },
-                "Property": "Sales Amount"
+                "Property": "Year"
               }
             },
-            "direction": "Descending"
+            "direction": "Ascending"
           }
         ]
       }
     },
     "objects": {
-      "columnHeaders": [
+      "categoryAxis": [
         {
           "properties": {
-            "columnAdjustment": {
+            "axisType": {
               "expr": {
                 "Literal": {
-                  "Value": "'growToFit'"
+                  "Value": "'Categorical'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "legend": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Top'"
                 }
               }
             }
@@ -120,13 +131,8 @@
             },
             "text": {
               "expr": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Title Brand Performance"
+                "Literal": {
+                  "Value": "'New vs returning customers by year'"
                 }
               }
             }

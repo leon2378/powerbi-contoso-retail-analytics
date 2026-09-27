@@ -45,6 +45,9 @@ jobs:
       - name: Contract check (dbt marts <-> semantic model)
         run: python scripts/check_model_contract.py
 
+      - name: Every model object has a lineageTag (Desktop drops untagged measures from visuals)
+        run: python scripts/add_lineage_tags.py --check
+
       - name: Data dictionary is up to date
         run: python scripts/generate_data_dictionary.py --check
 

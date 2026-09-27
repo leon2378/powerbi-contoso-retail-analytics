@@ -110,6 +110,7 @@ Tasks:
             Remove-Item Env:CONTOSO_RAW_DIR, Env:CONTOSO_MARTS_DIR, Env:DUCKDB_PATH -ErrorAction SilentlyContinue
         }
         Invoke-Step "Contract check (dbt <-> model)" { & $Python scripts\check_model_contract.py }
+        Invoke-Step "Lineage tags present" { & $Python scripts\add_lineage_tags.py --check }
         Invoke-Step "Data dictionary up to date" { & $Python scripts\generate_data_dictionary.py --check }
         Invoke-Step "Report checks (PBIR)" { & $Python scripts\validate_report.py }
         Invoke-Step "TMDL validation" { dotnet run --project ci\TmdlValidator -- powerbi\ContosoRetail.SemanticModel\definition --bim build\model.bim }

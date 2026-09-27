@@ -152,6 +152,10 @@ DIVIDE ( [Margin], [Sales Amount] )
 | **New Customers** | Customers whose first-ever order falls inside the selected period. | `#,0` |
 | **Returning Customers** | Customers who bought in the period and had also bought before it. | `#,0` |
 | **Sales per Customer** | Average net sales per buying customer. | `\$#,0.00` |
+| **Repeat Customer %** | Share of buying customers who placed two or more orders in the selected period. Meaningful at any grain, unlike new/returning, where every customer is "new" over all time. | `0.0%` |
+| **Orders per Customer** | Average number of orders per buying customer in the selected period. | `0.00` |
+| **Cohort Size** | Customers acquired in the cohort year in context (Customer[Acquisition Cohort]), counted over that whole year regardless of the date filter. BLANK unless exactly one cohort is in context. | `#,0` |
+| **Cohort Retention %** | Share of a cohort's customers who bought in the selected period: [Customers] / [Cohort Size]. Put Acquisition Cohort on rows and Year on columns for a retention triangle. | `0.0%` |
 
 <details><summary>DAX: Orders</summary>
 
@@ -212,11 +216,59 @@ DIVIDE ( [Sales Amount], [Customers] )
 
 </details>
 
+<details><summary>DAX: Repeat Customer %</summary>
+
+```dax
+VAR _RepeatCustomers =
+    COUNTROWS ( FILTER ( VALUES ( Sales[Customer Key] ), [Orders] > 1 ) )
+RETURN
+    DIVIDE ( _RepeatCustomers, [Customers] )
+```
+
+</details>
+
+<details><summary>DAX: Orders per Customer</summary>
+
+```dax
+DIVIDE ( [Orders], [Customers] )
+```
+
+</details>
+
+<details><summary>DAX: Cohort Size</summary>
+
+```dax
+VAR _Cohort = SELECTEDVALUE ( Customer[Acquisition Cohort] )
+RETURN
+    IF (
+        NOT ISBLANK ( _Cohort ) && _Cohort <> "No purchase",
+        CALCULATE ( [Customers], REMOVEFILTERS ( 'Date' ), 'Date'[Year] = VALUE ( _Cohort ) )
+    )
+```
+
+</details>
+
+<details><summary>DAX: Cohort Retention %</summary>
+
+```dax
+VAR _ActiveCustomers = [Customers]
+RETURN
+    IF ( NOT ISBLANK ( _ActiveCustomers ), DIVIDE ( _ActiveCustomers, [Cohort Size] ) )
+```
+
+</details>
+
 ### Report Helpers
 
 | Measure | Description | Format |
 |---|---|---|
 | **Data Freshness** | Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters. |  |
+| **Selected Time Calculation Suffix** | " (YTD)"-style suffix naming the selected Time Intelligence item; BLANK for Current. |  |
+| **Selected Metric Label** | Name of the metric picked in the Metric Selector field parameter plus the time calculation, e.g. "Margin % (YTD)". Used for dynamic visual titles. |  |
+| **Title Metric by Year and Channel** | Dynamic title for the year x channel chart on the Sales Performance page. |  |
+| **Title Metric by Weekday** | Dynamic title for the weekday chart on the Sales Performance page. |  |
+| **Title Brand Performance** | Dynamic title for the brand table on the Sales Performance page (names the time calculation). |  |
+| **Title Metric by Month** | Dynamic title for the monthly trend on the Sales Performance page. |  |
 
 <details><summary>DAX: Data Freshness</summary>
 
@@ -225,6 +277,63 @@ VAR _LastOrderDate =
     CALCULATE ( MAX ( Sales[Order Date] ), REMOVEFILTERS () )
 RETURN
     "Data through " & FORMAT ( _LastOrderDate, "d mmm yyyy" )
+```
+
+</details>
+
+<details><summary>DAX: Selected Time Calculation Suffix</summary>
+
+```dax
+VAR _TimeCalculation = SELECTEDVALUE ( 'Time Intelligence'[Time Calculation], "Current" )
+RETURN
+    IF ( _TimeCalculation <> "Current", " (" & _TimeCalculation & ")" )
+```
+
+</details>
+
+<details><summary>DAX: Selected Metric Label</summary>
+
+```dax
+// A field parameter's display column forms a composite key with its hidden fields column,
+// so SELECTEDVALUE/VALUES on [Metric] alone raises an error. Read both columns together.
+VAR _Selected =
+    SUMMARIZE ( 'Metric Selector', 'Metric Selector'[Metric], 'Metric Selector'[Metric Fields] )
+VAR _Metric =
+    IF ( COUNTROWS ( _Selected ) = 1, MAXX ( _Selected, 'Metric Selector'[Metric] ), "Sales Amount" )
+RETURN
+    _Metric & [Selected Time Calculation Suffix]
+```
+
+</details>
+
+<details><summary>DAX: Title Metric by Year and Channel</summary>
+
+```dax
+[Selected Metric Label] & " by year and channel"
+```
+
+</details>
+
+<details><summary>DAX: Title Metric by Weekday</summary>
+
+```dax
+[Selected Metric Label] & " by weekday"
+```
+
+</details>
+
+<details><summary>DAX: Title Brand Performance</summary>
+
+```dax
+"Brand performance" & [Selected Time Calculation Suffix]
+```
+
+</details>
+
+<details><summary>DAX: Title Metric by Month</summary>
+
+```dax
+[Selected Metric Label] & " by month"
 ```
 
 </details>

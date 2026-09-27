@@ -102,17 +102,10 @@
       "valueAxis": [
         {
           "properties": {
-            "showAxisTitle": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             }
@@ -133,8 +126,13 @@
             },
             "text": {
               "expr": {
-                "Literal": {
-                  "Value": "'By weekday'"
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Title Metric by Weekday"
                 }
               }
             }

@@ -111,19 +111,6 @@
             }
           }
         }
-      ],
-      "valueAxis": [
-        {
-          "properties": {
-            "showAxisTitle": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            }
-          }
-        }
       ]
     },
     "visualContainerObjects": {
@@ -139,8 +126,13 @@
             },
             "text": {
               "expr": {
-                "Literal": {
-                  "Value": "'Trend by month'"
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Title Metric by Month"
                 }
               }
             }

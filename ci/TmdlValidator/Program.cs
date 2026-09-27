@@ -127,6 +127,13 @@ foreach (var role in model.Roles)
 // --- output ---------------------------------------------------------------------------------------
 if (bimPath is not null)
 {
+    // PBIP's database.tmdl is nameless, but .bim consumers such as Tabular Editor require a name.
+    // Use the item folder name ("ContosoRetail.SemanticModel" -> "ContosoRetail").
+    if (string.IsNullOrEmpty(db.Name))
+    {
+        var itemFolder = Path.GetFileName(Path.GetDirectoryName(folder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)))!;
+        db.Name = db.ID = itemFolder.Replace(".SemanticModel", "");
+    }
     Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(bimPath))!);
     File.WriteAllText(bimPath, JsonSerializer.SerializeDatabase(db, new SerializeOptions { IgnoreInferredObjects = true, IgnoreInferredProperties = true, IgnoreTimestamps = true }));
     Console.WriteLine($"Wrote {bimPath}");

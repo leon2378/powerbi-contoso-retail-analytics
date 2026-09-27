@@ -27,7 +27,8 @@ All pages share one header: Year, Country and Channel slicers that stay in sync 
 - **Products.** What sells, at what price and margin? KPI cards (Sales Amount, Margin, Margin %, Avg Selling Price, Products Sold), sales vs margin % for each of the 32 subcategories (sales on a log scale), the top 10 products by sales and a price band summary showing each band's share of sales and margin. A Category slicer in the header narrows every visual, e.g. to see how one category's sales split across price bands.
 - **Stores & Channels.** Where do we sell? KPI cards (Sales Amount, Online Sales %, Open Stores, Sales per Store, Sales per m²), online vs physical sales by month (online overtook physical stores in 2023), physical store sales by country with drill-down to state, a table of physical stores with their open and close dates, and sales per m² of store space by country. Physical-store visuals are orange, matching the Physical colour on every page. To test row-level security, use *Modeling → View as* with the Regional Manager role and a user from `rls_user_access.csv` (e.g. `emea.manager@contoso.example`).
 - **Budget Variance.** Where are we off plan? KPI cards (sales and budget over the same months, variance, variance % and how many categories are below budget), a waterfall of the variance by category, variance % by store country and a category × year heatmap that drills down to months. Blue is above budget and red below (the theme's diverging pair), and every value carries a + or − sign, so colour never carries the meaning alone.
-- **Product Detail** (drill-through). Right-click any product, e.g. in the Products page's top 10, and choose *Drill through → Product Detail*. The header names the product with its brand, category, price band, list price and cost, then shows sales, units, average selling price, margin %, customers and its rank in its subcategory, plus a monthly trend, price, volume and margin by year, customers by age band and gender, and sales by channel. Filters from the source page carry over, and the back button returns to it. Browsed directly, the page opens on the top seller.
+- **Product Detail** (drill-through). Right-click any product, e.g. in the Products page's top 10, and choose *Drill through → Product Detail*. The header names the product with its brand, category, price band, list price and cost, then shows sales, units, average selling price, margin %, customers and its rank in its subcategory, plus a monthly trend, price, volume and margin by year, customers by age band and gender, and sales by channel. Filters from the source page carry over, and the back button returns to it (in Power BI Desktop, Ctrl+click buttons: a plain click only selects them for editing). Browsed directly, the page opens on the top seller.
+- **Category tooltip** (report-page tooltip). Hover a category bar on the Executive Overview, a step of the Budget Variance waterfall or a subcategory in the Products scatter to see its sales, margin, monthly trend and price-band mix.
 
 ![Sales Performance page: metric tiles, a time-calculation dropdown, monthly trend, online vs physical by year, a weekday profile and a brand table, with titles naming the selected metric](docs/images/sales-performance.png)
 
@@ -140,7 +141,7 @@ Key design decisions:
 | `add_lineage_tags.py --check` | hand-written model objects without a `lineageTag`, which Desktop silently drops from visuals | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
-| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore | CI, `check` |
+| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual and container settings, e.g. a tooltip type) | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
 
@@ -154,7 +155,7 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 
 ## Roadmap
 
-- A report-page tooltip (mini trend, margin and price-band mix on hover). The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
+- Report accessibility pass (alt text, tab order, mobile layout). The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

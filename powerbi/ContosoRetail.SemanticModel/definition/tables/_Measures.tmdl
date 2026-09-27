@@ -86,6 +86,18 @@ table _Measures
 		formatString: 0.0%
 		displayFolder: Products
 
+	/// Share of Sales Amount by price band within the current product selection, e.g. one category.
+	/// Removes the price band filter (and its sort column, which Power BI groups by too) from the
+	/// denominator only, so the bands of a category add up to 100%.
+	measure 'Price Band Share %' =
+			DIVIDE (
+			    [Sales Amount],
+			    CALCULATE ( [Sales Amount], REMOVEFILTERS ( 'Product'[Price Band], 'Product'[Price Band Sort] ) )
+			)
+		lineageTag: aef9ebbc-8d18-575d-9ee8-5a53a4139b58
+		formatString: 0.0%
+		displayFolder: Products
+
 	/// Where the product in context ranks by Sales Amount among the products of its subcategory that
 	/// sold in the selected period, e.g. "#3 of 45". BLANK unless exactly one product with sales is in context.
 	measure 'Subcategory Sales Rank' =
@@ -369,6 +381,22 @@ table _Measures
 			        & FORMAT ( SELECTEDVALUE ( 'Product'[Standard Cost] ), "$#,0.00" )
 			)
 		lineageTag: 8031e69b-5bfe-5f9e-bf01-8c4ab3ca9fda
+		displayFolder: Report Helpers
+
+		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}
+
+	/// Header of the category tooltip page: the hovered subcategory with its category (e.g. from the
+	/// Products scatter), otherwise the hovered category, or "All categories".
+	measure 'Tooltip Title' =
+			VAR _Category = SELECTEDVALUE ( 'Product'[Category] )
+			VAR _Subcategory = SELECTEDVALUE ( 'Product'[Subcategory] )
+			RETURN
+			    IF (
+			        ISFILTERED ( 'Product'[Subcategory] ) && NOT ISBLANK ( _Subcategory ),
+			        _Subcategory & "  ·  " & _Category,
+			        COALESCE ( _Category, "All categories" )
+			    )
+		lineageTag: d726d8a0-dc29-5dd5-8181-6011cc1eb82e
 		displayFolder: Report Helpers
 
 		annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["CR_MEASURE_FORMAT_STRING"]}

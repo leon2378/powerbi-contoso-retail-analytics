@@ -57,7 +57,7 @@ table 'Time Intelligence'
 				VAR _IsRatioMeasure =
 				    ISSELECTEDMEASURE (
 				        [Margin %], [Discount %], [Sales vs Budget %], [Repeat Customer %], [Cohort Retention %],
-				        [Sales Mix %], [Online Sales %]
+				        [Sales Mix %], [Online Sales %], [Price Band Share %]
 				    )
 				RETURN
 				    // Text measures (labels, dynamic titles) pass through unchanged; a blank current value stays blank.

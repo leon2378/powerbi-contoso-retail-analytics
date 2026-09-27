@@ -1,16 +1,16 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.3.0/schema.json",
-  "name": "salesByCategory",
+  "name": "ttTrend",
   "position": {
-    "x": 800,
-    "y": 180,
-    "z": 8000,
-    "height": 256,
-    "width": 464,
-    "tabOrder": 8000
+    "x": 8,
+    "y": 116,
+    "z": 2000,
+    "height": 96,
+    "width": 384,
+    "tabOrder": 2000
   },
   "visual": {
-    "visualType": "clusteredBarChart",
+    "visualType": "lineChart",
     "query": {
       "queryState": {
         "Category": {
@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Product"
+                      "Entity": "Date"
                     }
                   },
-                  "Property": "Category"
+                  "Property": "Month Start Date"
                 }
               },
-              "queryRef": "Product.Category",
-              "nativeQueryRef": "Category",
+              "queryRef": "Date.Month Start Date",
+              "nativeQueryRef": "Month Start Date",
               "active": true
             }
           ]
@@ -55,28 +55,28 @@
         "sort": [
           {
             "field": {
-              "Measure": {
+              "Column": {
                 "Expression": {
                   "SourceRef": {
-                    "Entity": "_Measures"
+                    "Entity": "Date"
                   }
                 },
-                "Property": "Sales Amount"
+                "Property": "Month Start Date"
               }
             },
-            "direction": "Descending"
+            "direction": "Ascending"
           }
         ]
       }
     },
     "objects": {
-      "labels": [
+      "categoryAxis": [
         {
           "properties": {
-            "show": {
+            "axisType": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "'Scalar'"
                 }
               }
             }
@@ -96,20 +96,13 @@
           }
         }
       ],
-      "categoryAxis": [
+      "lineStyles": [
         {
           "properties": {
-            "preferredCategoryWidth": {
+            "strokeWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "16D"
-                }
-              }
-            },
-            "innerPadding": {
-              "expr": {
-                "Literal": {
-                  "Value": "25D"
+                  "Value": "2D"
                 }
               }
             }
@@ -131,7 +124,14 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Net sales by category'"
+                  "Value": "'Monthly sales (USD)'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
                 }
               }
             }
@@ -144,48 +144,28 @@
             "top": {
               "expr": {
                 "Literal": {
-                  "Value": "8D"
+                  "Value": "6D"
                 }
               }
             },
             "bottom": {
               "expr": {
                 "Literal": {
-                  "Value": "4D"
+                  "Value": "2D"
                 }
               }
             },
             "left": {
               "expr": {
                 "Literal": {
-                  "Value": "16D"
+                  "Value": "10D"
                 }
               }
             },
             "right": {
               "expr": {
                 "Literal": {
-                  "Value": "16D"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "visualTooltip": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "section": {
-              "expr": {
-                "Literal": {
-                  "Value": "'CategoryTooltip'"
+                  "Value": "10D"
                 }
               }
             }

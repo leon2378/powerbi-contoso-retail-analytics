@@ -276,6 +276,7 @@ RETURN
 |---|---|---|
 | **Products Sold** | Distinct products with at least one sale in the selected period. | `#,0` |
 | **Sales Mix %** | Share of Sales Amount across the products selected outside the visual (slicers and cross-filters still apply), e.g. each price band's slice of sales. A visual's rows add up to 100%. | `0.0%` |
+| **Price Band Share %** | Share of Sales Amount by price band within the current product selection, e.g. one category. Removes the price band filter (and its sort column, which Power BI groups by too) from the denominator only, so the bands of a category add up to 100%. | `0.0%` |
 | **Subcategory Sales Rank** | Where the product in context ranks by Sales Amount among the products of its subcategory that sold in the selected period, e.g. "#3 of 45". BLANK unless exactly one product with sales is in context. |  |
 
 <details><summary>DAX: Products Sold</summary>
@@ -290,6 +291,17 @@ DISTINCTCOUNT ( Sales[Product Key] )
 
 ```dax
 DIVIDE ( [Sales Amount], CALCULATE ( [Sales Amount], ALLSELECTED ( 'Product' ) ) )
+```
+
+</details>
+
+<details><summary>DAX: Price Band Share %</summary>
+
+```dax
+DIVIDE (
+    [Sales Amount],
+    CALCULATE ( [Sales Amount], REMOVEFILTERS ( 'Product'[Price Band], 'Product'[Price Band Sort] ) )
+)
 ```
 
 </details>
@@ -324,6 +336,7 @@ RETURN
 | **Budget Variance Color** | Bar colour for budget variance, from the theme's diverging pair: blue at or above budget, red below. Bound to a visual's fill as a field value, so the colour always matches the sign. |  |
 | **Selected Product** | Header of the Product Detail drill-through page: the product in context, or a hint when there isn't exactly one. |  |
 | **Selected Product Details** | Subheader of the Product Detail page, e.g. "Contoso · Computers › Laptops · $500-999 · list price $899.00 · standard cost $412.34". BLANK unless exactly one product is in context. |  |
+| **Tooltip Title** | Header of the category tooltip page: the hovered subcategory with its category (e.g. from the Products scatter), otherwise the hovered category, or "All categories". |  |
 | **Data Freshness** | Report-header freshness label, e.g. "Data through 31 Dec 2025". Ignores all report filters. |  |
 | **Selected Time Calculation Suffix** | " (YTD)"-style suffix naming the selected Time Intelligence item; BLANK for Current. |  |
 | **Selected Metric Label** | Name of the metric picked in the Metric Selector field parameter plus the time calculation, e.g. "Margin % (YTD)". Used for dynamic visual titles. |  |
@@ -359,6 +372,21 @@ IF (
         & FORMAT ( SELECTEDVALUE ( 'Product'[List Price] ), "$#,0.00" ) & "  ·  standard cost "
         & FORMAT ( SELECTEDVALUE ( 'Product'[Standard Cost] ), "$#,0.00" )
 )
+```
+
+</details>
+
+<details><summary>DAX: Tooltip Title</summary>
+
+```dax
+VAR _Category = SELECTEDVALUE ( 'Product'[Category] )
+VAR _Subcategory = SELECTEDVALUE ( 'Product'[Subcategory] )
+RETURN
+    IF (
+        ISFILTERED ( 'Product'[Subcategory] ) && NOT ISBLANK ( _Subcategory ),
+        _Subcategory & "  ·  " & _Category,
+        COALESCE ( _Category, "All categories" )
+    )
 ```
 
 </details>

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "CategoryTooltip",
+  "displayName": "Category Tooltip",
+  "displayOption": "ActualSize",
+  "height": 384,
+  "width": 400,
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "ttCategory",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Product"
+              }
+            },
+            "Property": "Category"
+          }
+        },
+        "type": "Categorical",
+        "howCreated": "Drillthrough"
+      },
+      {
+        "name": "ttSubcategory",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Product"
+              }
+            },
+            "Property": "Subcategory"
+          }
+        },
+        "type": "Categorical",
+        "howCreated": "Drillthrough"
+      }
+    ]
+  },
+  "pageBinding": {
+    "name": "ttCategoryTooltip",
+    "type": "Tooltip",
+    "parameters": [
+      {
+        "name": "ttCategoryParam",
+        "boundFilter": "ttCategory",
+        "fieldExpr": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Product"
+              }
+            },
+            "Property": "Category"
+          }
+        }
+      },
+      {
+        "name": "ttSubcategoryParam",
+        "boundFilter": "ttSubcategory",
+        "fieldExpr": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Product"
+              }
+            },
+            "Property": "Subcategory"
+          }
+        }
+      }
+    ]
+  },
+  "type": "Tooltip",
+  "visibility": "HiddenInViewMode"
+}

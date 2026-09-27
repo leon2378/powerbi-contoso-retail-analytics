@@ -7,8 +7,9 @@ Checks:
   2. Custom themes validate against the Power BI report theme schema.
   3. Every table/column/measure that a visual or filter references exists in the semantic model
      (TMDL), so a renamed measure fails CI instead of showing a broken visual after deployment.
-  4. Enumerated formatting values (e.g. an axis type) are ones Power BI recognises. Desktop
-     silently ignores unknown values, so these typos are otherwise invisible.
+  4. Enumerated formatting values (e.g. an axis type, or a tooltip type in the container settings)
+     are ones Power BI recognises. Desktop silently ignores unknown values, so these typos are
+     otherwise invisible.
   5. PBIR naming rules: folder names match object names, pages.json lists real pages, and every
      registered resource file exists.
 
@@ -152,11 +153,20 @@ def check_formatting_values(visual_file: Path, visual: dict, theme_schema: dict)
 
     The PBIR schemas don't constrain these values, and Desktop silently ignores unknown ones, so a
     typo like 'Continuous' instead of 'Scalar' would otherwise go unnoticed. The report theme schema
-    lists the allowed values per visual type.
+    lists the allowed values per visual type, and for the container settings every visual shares
+    (title, subtitle, tooltip, ...) in its commonCards definition.
     """
-    objects = visual.get("visual", {}).get("objects") or {}
-    definition = theme_schema.get("definitions", {}).get(f"visual-{visual.get('visual', {}).get('visualType')}")
-    if not objects or definition is None:
+    definitions = theme_schema.get("definitions", {})
+    body = visual.get("visual", {})
+    definition = definitions.get(f"visual-{body.get('visualType')}")
+    if definition is not None:
+        check_object_values(visual_file, body.get("objects") or {}, definition)
+    if "commonCards" in definitions:
+        check_object_values(visual_file, body.get("visualContainerObjects") or {}, definitions["commonCards"])
+
+
+def check_object_values(visual_file: Path, objects: dict, definition: dict) -> None:
+    if not objects:
         return
     object_schemas = find_object_schemas(definition, set(objects)) or {}
     for object_name, entries in objects.items():

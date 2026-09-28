@@ -3,7 +3,8 @@
 Authentication (no secrets in code):
   * CI / service principal: set AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, or use
     azure/login with OIDC in GitHub Actions (then the Azure CLI credential is used).
-  * Local development: run `az login` first.
+  * Local development: run `az login` first, or set FABRIC_AUTH=browser to sign in through the web
+    browser instead (no Azure CLI needed; AZURE_TENANT_ID picks the tenant if you have several).
 The identity needs Contributor (or higher) on the target workspace, and the tenant must allow
 service principals to use Fabric APIs.
 """
@@ -16,7 +17,7 @@ from dataclasses import dataclass
 
 import requests
 from azure.core.credentials import TokenCredential
-from azure.identity import AzureCliCredential, ClientSecretCredential
+from azure.identity import AzureCliCredential, ClientSecretCredential, InteractiveBrowserCredential
 
 FABRIC_API = "https://api.fabric.microsoft.com/v1"
 POWERBI_API = "https://api.powerbi.com/v1.0/myorg"
@@ -32,6 +33,9 @@ def get_credential() -> TokenCredential:
             client_id=os.environ["AZURE_CLIENT_ID"],
             client_secret=os.environ["AZURE_CLIENT_SECRET"],
         )
+    if os.environ.get("FABRIC_AUTH", "").lower() == "browser":
+        # One sign-in per run: the credential reuses its token for the Fabric, Power BI and storage scopes.
+        return InteractiveBrowserCredential(tenant_id=os.environ.get("AZURE_TENANT_ID"))
     return AzureCliCredential()
 
 

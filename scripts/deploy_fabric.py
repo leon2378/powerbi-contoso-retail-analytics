@@ -2,7 +2,7 @@
 
 Steps:
   1. Ensure the Lakehouse exists and its SQL analytics endpoint is ready (created if missing).
-  2. --publish-data: push data/marts/*.parquet to the Lakehouse as Delta tables.
+  2. --publish-data: push the marts (data/marts/*.parquet, or --marts-dir) to the Lakehouse as Delta tables.
   3. Build a deployable copy of the project in build/fabric/<ENV>/ with the semantic model switched
      to the Fabric source (scripts/set_model_source.py) and pointed at this environment's endpoint.
      The repo itself is never modified.
@@ -64,7 +64,9 @@ def main() -> None:
     parser.add_argument("--lakehouse", default=os.environ.get("FABRIC_LAKEHOUSE_NAME", "lh_contoso"))
     parser.add_argument("--connection-id", default=os.environ.get("FABRIC_CONNECTION_ID") or None,
                         help="Fabric cloud connection (to the Lakehouse SQL endpoint) to bind the model to")
-    parser.add_argument("--publish-data", action="store_true", help="upload data/marts to the Lakehouse first")
+    parser.add_argument("--publish-data", action="store_true", help="upload the marts to the Lakehouse first")
+    parser.add_argument("--marts-dir", type=Path, default=ROOT / "data" / "marts",
+                        help="with --publish-data: folder of mart Parquet files (e.g. data/10m/marts)")
     parser.add_argument("--refresh", action="store_true", help="refresh the semantic model after deploying")
     parser.add_argument("--prune", action="store_true",
                         help="delete semantic models/reports in the workspace that are not in this repo")
@@ -91,7 +93,7 @@ def main() -> None:
     print(f"[{env}] Lakehouse '{lakehouse.name}' ready at {lakehouse.sql_endpoint_host}")
 
     if args.publish_data:
-        publish(client, lakehouse, ROOT / "data" / "marts")
+        publish(client, lakehouse, args.marts_dir)
         client.refresh_sql_endpoint_metadata(lakehouse)
 
     out = build(env, lakehouse.sql_endpoint_host, lakehouse.name, args.connection_id)

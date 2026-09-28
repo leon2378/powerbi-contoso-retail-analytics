@@ -65,6 +65,10 @@ az login
 
 `python scripts/deploy_fabric.py --environment DEV --build-only` produces the deployable folder without calling Fabric. Use it to inspect exactly what will be published.
 
+Without the Azure CLI, sign in through the browser instead: set `FABRIC_AUTH=browser` (and `AZURE_TENANT_ID` if your account
+belongs to several tenants). To deploy another dataset size than the one in `data/marts`, pass `--marts-dir`, e.g.
+`python scripts/deploy_fabric.py --environment DEV --workspace-id <guid> --publish-data --marts-dir data/10m/marts --refresh`.
+
 ## Troubleshooting
 
 | Symptom | Fix |

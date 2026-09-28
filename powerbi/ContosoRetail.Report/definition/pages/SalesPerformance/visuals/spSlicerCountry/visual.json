@@ -62,6 +62,19 @@
             }
           }
         }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Store country filter, including the online store. The selection is shared by every page.'"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "syncGroup": {

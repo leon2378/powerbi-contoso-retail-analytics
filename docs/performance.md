@@ -17,7 +17,7 @@ changed as a result.
 | Step | Result |
 |---|---|
 | Download and extract (680 MB archive) | 101 s |
-| `dbt build`: staging, marts and all 57 tests and unit tests | **27 s** |
+| `dbt build`: 11 models, 2 seeds and 45 tests (43 data tests, 2 unit tests) | **27 s** |
 | Full refresh in Power BI Desktop (Home → Refresh) | **4 min 13 s** |
 | Model size in memory (VertiPaq) | **845 MB**: Sales 634 MB, Customer 193 MB, everything else 18 MB |
 | Largest columns | `Sales[Order Number]` 90 MB (plus its hierarchy), `Sales[Net Amount]` 90 MB, `Sales[Net Amount (Local)]` 90 MB, `Customer[Customer Name]` 57 MB |

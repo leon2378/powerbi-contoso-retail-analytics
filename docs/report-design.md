@@ -43,12 +43,21 @@ Taken from a validated, colour-vision-deficiency-checked palette:
 
 ## Accessibility checklist
 
-- [ ] Every visual has alt text (*Format → General → Alt text*). Use a dynamic measure for KPI cards.
-- [ ] Tab order follows reading order (*View → Selection → Tab order*).
-- [ ] Information is never carried by colour alone (labels, icons, patterns).
-- [ ] Text contrast ≥ 4.5:1. The theme's ink colours `#0B0B0B` and `#52514E` pass on white.
-- [ ] Keyboard-only walkthrough of every page, including slicers and drill-through.
-- [ ] Mobile layout for the Executive Overview (*View → Mobile layout*).
+- [x] Every visual has alt text (*Format → General → Alt text*): 69 visuals. The KPI rows and freshness labels use
+      measures (display folder *Report Helpers\Alt Text*), so a screen reader hears the current values, e.g. "Sales
+      $218.8 million, margin 55.9%, …". `validate_report.py` fails CI when a visual has none or when typed alt text
+      exceeds Power BI's 250 characters.
+- [x] Tab order follows reading order (*View → Selection → Tab order*), on the web and the mobile layout.
+      `validate_report.py` fails CI when a visual above, or to the left in the same row, comes later.
+- [x] Information is never carried by colour alone: legends on every multi-series chart, direct labels, + and −
+      signs on every variance, and a one-colour scatter with labelled points.
+- [x] Text contrast ≥ 4.5:1. Ink `#0B0B0B` is 19.7:1 and `#52514E` 7.9:1 on white; dark text on the data-bar and
+      heatmap tints is 9.3:1 or more. Data labels on orange bars are set to ink (6.2:1 inside the bar), because
+      Power BI's automatic white label is only 3.2:1 there.
+- [ ] Keyboard-only walkthrough of every page, including slicers and drill-through (manual: *Ctrl+F6* to reach
+      the canvas, *Tab* between visuals, *Ctrl+Right arrow* into a visual, *Shift+F10* for drill-through).
+- [x] Mobile layout for the Executive Overview (*View → Mobile layout*): one column with the filters, KPI cards in
+      two columns, the trend and the category and country charts. The category table is left out on phones.
 
 ## Performance checklist
 

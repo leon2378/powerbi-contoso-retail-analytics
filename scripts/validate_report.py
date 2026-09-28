@@ -12,6 +12,8 @@ Checks:
      otherwise invisible.
   5. PBIR naming rules: folder names match object names, pages.json lists real pages, and every
      registered resource file exists.
+  6. Accessibility: every visual has alt text (a measure, or at most 250 characters), and the tab
+     order follows the layout on the web and the mobile layout (see check_tab_order).
 
 Usage:
     python scripts/validate_report.py
@@ -181,6 +183,40 @@ def check_object_values(visual_file: Path, objects: dict, definition: dict) -> N
                     error(visual_file, f"{object_name}.{prop} = {literal} is not one of {sorted(allowed)}")
 
 
+ALT_TEXT_MAX = 250  # Power BI's limit for typed alt text
+ROW_TOLERANCE = 16  # px: visuals whose top edges are this close form one row
+
+
+def check_alt_text(visual_file: Path, visual: dict) -> None:
+    general = (visual.get("visual", {}).get("visualContainerObjects") or {}).get("general") or [{}]
+    alt = (general[0].get("properties") or {}).get("altText", {}).get("expr", {})
+    literal = alt.get("Literal", {}).get("Value")
+    if "Measure" in alt:
+        return
+    if not literal or not literal.strip("'").strip():
+        error(visual_file, "missing alt text (Format > General > Alt text)")
+    elif len(literal.strip("'").replace("''", "'")) > ALT_TEXT_MAX:
+        error(visual_file, f"alt text is longer than {ALT_TEXT_MAX} characters")
+
+
+def check_tab_order(where: Path, positions: dict[str, dict]) -> None:
+    """Keyboard (tab) order must follow reading order: top to bottom, left to right.
+
+    Two rules, checked for every pair of visuals: a visual that ends above another one starts must
+    come first, and of two visuals whose top edges are within ROW_TOLERANCE px (one row), the left one
+    comes first. Visuals that neither stack nor share a row (e.g. a tall panel beside two rows) can
+    be in either order, so staggered layouts don't raise false alarms.
+    """
+    items = [(name, pos) for name, pos in positions.items() if pos.get("tabOrder") is not None]
+    for a_name, a in items:
+        for b_name, b in items:
+            above = a["y"] + a["height"] <= b["y"]
+            left_in_row = abs(a["y"] - b["y"]) <= ROW_TOLERANCE and a["x"] < b["x"]
+            if (above or left_in_row) and a["tabOrder"] > b["tabOrder"]:
+                error(where, f"tab order: '{a_name}' ({'above' if above else 'left of'} '{b_name}') "
+                             f"should come before it but has tabOrder {a['tabOrder']} > {b['tabOrder']}")
+
+
 def check_report(report_dir: Path) -> None:
     pbir = json.loads((report_dir / "definition.pbir").read_text(encoding="utf-8"))
     model_path = pbir.get("datasetReference", {}).get("byPath", {}).get("path")
@@ -198,11 +234,17 @@ def check_report(report_dir: Path) -> None:
         page = json.loads((page_dir / "page.json").read_text(encoding="utf-8"))
         if page["name"] != page_dir.name or not NAME_RULE.match(page_dir.name):
             error(page_dir / "page.json", f"page name '{page['name']}' must match folder and be [A-Za-z0-9_-]")
+        web_positions, mobile_positions = {}, {}
         for visual_file in (page_dir / "visuals").glob("*/visual.json"):
             visual = json.loads(visual_file.read_text(encoding="utf-8"))
             if visual["name"] != visual_file.parent.name or not NAME_RULE.match(visual["name"]):
                 error(visual_file, f"visual name '{visual['name']}' must match folder and be [A-Za-z0-9_-]")
             check_formatting_values(visual_file, visual, theme_schema)
+            check_alt_text(visual_file, visual)
+            web_positions[visual["name"]] = visual["position"]
+            mobile_file = visual_file.with_name("mobile.json")
+            if mobile_file.exists():
+                mobile_positions[visual["name"]] = json.loads(mobile_file.read_text(encoding="utf-8"))["position"]
             if model is None:
                 continue
             for entity, prop in field_references(visual):
@@ -210,6 +252,8 @@ def check_report(report_dir: Path) -> None:
                     error(visual_file, f"unknown table '{entity}'")
                 elif prop is not None and prop not in model[entity]:
                     error(visual_file, f"'{entity}' has no column/measure/hierarchy '{prop}'")
+        check_tab_order(page_dir / "page.json", web_positions)
+        check_tab_order(page_dir / "page.json (mobile layout)", mobile_positions)
 
     report = json.loads((definition / "report.json").read_text(encoding="utf-8"))
     for package in report.get("resourcePackages", []):

@@ -1,6 +1,6 @@
 # Contoso Retail Analytics: end-to-end Power BI
 
-An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a six-page report with a product drill-through, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
+An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a six-page report, plus a product drill-through and a hover tooltip page, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
@@ -13,13 +13,13 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, and a product drill-through page |
-| **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, generated data dictionary |
+| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, alt text on every visual (live values for KPI cards), a phone layout for the Executive Overview, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, a product drill-through page and a category tooltip page |
+| **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, accessibility checks (alt text, tab order), generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
 ## Report pages
 
-All pages share one header: Year, Country and Channel slicers that stay in sync as you move between pages, and a "Data through …" freshness label. Legend colours are pinned to each value (Online and Female are always blue), so filtering never repaints them.
+The six main pages share one header: Year, Country and Channel slicers that stay in sync as you move between pages, and a "Data through …" freshness label. Legend colours are pinned to each value (Online and Female are always blue), so filtering never repaints them.
 
 - **Executive Overview.** How are we doing against last year and the budget? KPI cards (Sales Amount, Margin %, Orders, Customers, Sales vs Budget %), net sales vs budget by month, sales by category and store country, and a category matrix with Current, PY and YoY %.
 - **Sales Performance.** What drives revenue? Metric tiles (a field parameter) switch every chart between Sales Amount, Margin, Margin %, Orders, Customers and Avg Order Value. The Time Calculation dropdown (the calculation group) applies YTD, PY, YoY %, Rolling 12M and more. Charts show the monthly trend, online vs physical by year, a weekday profile and brand performance, and every title names what's on display, e.g. "Orders (YoY %) by month".
@@ -75,14 +75,14 @@ The semantic model has **one** data-access function, `fnLoadTable`. `scripts/set
 
 ## Quick start (local, no cloud needed)
 
-Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (a recent version; if your version lists them under *Options → Preview features*, enable the Power BI Project, TMDL and PBIR options), and optionally the .NET 8 SDK for the TMDL validator.
+Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (a recent version; if your version lists them under *Options → Preview features*, enable the Power BI Project, TMDL and PBIR options), and optionally the .NET 8 SDK for the TMDL validator and PerfKit.
 
 ```powershell
 .\tasks.ps1 setup            # .venv + dependencies
 .\tasks.ps1 all -Size 1m     # download ~66 MB, dbt build + tests, point the model at data\marts
 ```
 
-Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh**.
+Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh**. Use `-Size 100k` to get the numbers in the screenshots above, or see [Performance at 10M orders](#performance-at-10m-orders) for the largest release.
 
 - **After changing model files outside Desktop** (editing TMDL, or pulling someone else's changes), close Power BI Desktop completely and open the `.pbip` again. Reopening the file inside a running Desktop session can leave new measures out of the visuals.
 - **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop.
@@ -137,12 +137,12 @@ Key design decisions:
 
 | Check | Catches | Runs in |
 |---|---|---|
-| `dbt build` (fixtures) | broken SQL, contract/type drift, failed data tests, unit-test regressions, source ↔ mart totals mismatch | CI, `tasks.ps1 check` |
+| `dbt build` (fixtures) | broken SQL, contract/type drift, failed data tests, unit-test regressions, source ↔ mart totals mismatch, broken order-grain assumptions behind the fast `[Orders]` measure | CI, `tasks.ps1 check` |
 | `check_model_contract.py` | a dbt column renamed or retyped without updating the Power BI model | CI, `check` |
 | `add_lineage_tags.py --check` | hand-written model objects without a `lineageTag`, which Desktop silently drops from visuals | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
-| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual and container settings, e.g. a tooltip type) | CI, `check` |
+| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual and container settings, e.g. a tooltip type), visuals without alt text, tab order that doesn't follow the layout | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
 
@@ -152,7 +152,7 @@ Lessons from building the report by editing TMDL and PBIR directly are in the [r
 
 The same pipeline and report were run on SQLBI's 10M-order release (23.7M order lines, 1.7M customers). Details, method and how to reproduce are in **[docs/performance.md](docs/performance.md)**.
 
-- `dbt build` with all 57 tests: **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **845 MB**.
+- `dbt build` (11 models, 2 seeds, 45 tests): **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **845 MB**.
 - Every query the report sends was recorded during a click-through and replayed on a cleared cache: **93% run under 1 s cold** (up from 76%), the 90th percentile dropped from 3.7 s to **0.83 s**, and warm queries take 6 ms (median).
 - The gains came from counting orders by their first line where no product filter applies (a dbt test guards the assumption), a cheaper repeat-customer count, and Units instead of Orders in the brand table. The six queries still above 1 s cold count distinct customers among 1.7M.
 - The run also caught a check that only failed at scale: sub-cent rounding across 23.7M lines broke the source ↔ mart reconciliation test's $1 tolerance. It now rounds like the mart and requires an exact match.
@@ -161,11 +161,12 @@ The same pipeline and report were run on SQLBI's 10M-order release (23.7M order 
 
 `main` deploys to DEV automatically. TEST and PROD are promoted manually, and PROD needs an approval. The pipeline builds the marts, publishes them as Delta tables, deploys the model and report with fabric-cicd, binds the data connection and runs an enhanced refresh. One-time setup (workspaces, service principal with OIDC, connection, GitHub environments) is in **[docs/deployment.md](docs/deployment.md)**.
 
-Status: the deployable build (the model switched to the Fabric source) is produced and validated in every CI run. A live deployment needs a Fabric capacity (a trial works) and the one-time setup; until the `FABRIC_ENABLED` variable is set, the deploy workflow skips itself.
+Status: the deployable build (the model switched to the Fabric source) is produced and validated in every CI run, but it has not been deployed to a live tenant yet. That needs a Fabric capacity (a trial works) and the one-time setup; until the `FABRIC_ENABLED` variable is set, the deploy workflow skips itself. For a first deploy from your own machine, `FABRIC_AUTH=browser` signs in through the browser, so the Azure CLI isn't needed.
 
 ## Roadmap
 
-- Report accessibility pass (alt text, tab order, mobile layout). The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
+- A first live deployment to Fabric (the pipeline is built and validated in CI; see the status above).
+- Mobile layouts for the remaining pages. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

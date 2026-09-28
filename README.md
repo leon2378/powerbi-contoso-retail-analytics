@@ -52,6 +52,10 @@ The six main pages share one header: Year, Country and Channel slicers that stay
 
 *Product Detail for the top seller. Its average selling price fell from $2,275 in 2016 to $912 in 2025 while the margin held at about 65%.*
 
+![Phone layouts of the Executive Overview, Sales Performance and Product Detail pages: the slicers across the top, KPI cards in two columns, the metric buttons two per row, and the product header above its KPI cards](docs/images/phone-layouts.png)
+
+*The first screen of three phone layouts. Every page and the drill-through has one: KPI cards in two columns, then the charts, with the wide tables and heatmaps left for the desktop view.*
+
 ## Architecture
 
 ```mermaid

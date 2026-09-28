@@ -82,10 +82,10 @@ Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) 
 .\tasks.ps1 all -Size 10m    # download ~680 MB, dbt build + tests, point the model at data\marts
 ```
 
-Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh** (about 5 minutes for 23.7M order lines). The screenshots use this 10M release; `-Size 100k` or `-Size 1m` is quicker for trying things out. See [Performance at 10M orders](#performance-at-10m-orders) for what that scale takes.
+Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop, click **Refresh** (about 5 minutes for 23.7M order lines) and save. The data isn't in the repository: Desktop keeps it in `.pbi/cache.abf` (git-ignored) when you save, and opens from it next time, so without a save every session starts with a refresh. The screenshots use this 10M release; `-Size 100k` or `-Size 1m` is quicker for trying things out. See [Performance at 10M orders](#performance-at-10m-orders) for what that scale takes.
 
 - **After changing model files outside Desktop** (editing TMDL, or pulling someone else's changes), close Power BI Desktop completely and open the `.pbip` again. Reopening the file inside a running Desktop session can leave new measures out of the visuals.
-- **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop.
+- **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop. A save in Desktop also rewrites the report and model files in its own format (newer schema versions, reordered properties), so check `git status` for changes you didn't make.
 
 Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site), `dictionary`, `deploy`. Run `.\tasks.ps1 help` for the full list.
 
@@ -106,7 +106,7 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site)
 ├── ci/
 │   ├── TmdlValidator/        .NET tool: TOM deserialisation + DAX reference checks
 │   └── bpa-rules.json        Best Practice Analyzer rules (severity 3 fails CI)
-├── tools/PerfKit/            .NET tool: trace, replay and size the model running in Desktop
+├── tools/PerfKit/            .NET tool: trace, replay, size and refresh the model running in Desktop
 ├── docs/                     data dictionary (generated), deployment, report-design and performance guides, screenshots
 └── .github/workflows/        ci.yml (quality gates), deploy.yml (Fabric CD)
 ```
@@ -150,7 +150,7 @@ The [report design guide](docs/report-design.md) has the page plan, colour syste
 
 ## Performance at 10M orders
 
-The same pipeline and report were run on SQLBI's 10M-order release (23.7M order lines, 1.7M customers). Details, method and how to reproduce are in **[docs/performance.md](docs/performance.md)**.
+The screenshots above come from SQLBI's 10M-order release (23.7M order lines, 1.7M customers), and this is what that scale takes. Details, method and how to reproduce are in **[docs/performance.md](docs/performance.md)**.
 
 - `dbt build` (11 models, 2 seeds, 45 tests): **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **845 MB**.
 - Every query the report sends was recorded during a click-through and replayed on a cleared cache: **93% run under 1 s cold** (up from 76%), the 90th percentile dropped from 3.7 s to **0.83 s**, and warm queries take 6 ms (median).

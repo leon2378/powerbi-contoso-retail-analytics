@@ -483,7 +483,7 @@ RETURN
 <details><summary>DAX: Alt Text Executive KPIs</summary>
 
 ```dax
-"Sales " & FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million"
+"Sales " & IF ( ABS ( [Sales Amount] ) >= 1e9, FORMAT ( DIVIDE ( [Sales Amount], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million" )
     & ", margin " & FORMAT ( [Margin %], "0.0%" )
     & ", " & FORMAT ( [Orders], "#,0" ) & " orders, " & FORMAT ( [Customers], "#,0" ) & " customers"
     & ", sales vs budget " & FORMAT ( [Sales vs Budget %], "+0.0%;-0.0%;0.0%" ) & "."
@@ -505,8 +505,8 @@ FORMAT ( [Customers], "#,0" ) & " customers, "
 <details><summary>DAX: Alt Text Products KPIs</summary>
 
 ```dax
-"Sales " & FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million"
-    & ", margin " & FORMAT ( DIVIDE ( [Margin], 1e6 ), "$#,0.0" ) & " million" & " (" & FORMAT ( [Margin %], "0.0%" ) & ")"
+"Sales " & IF ( ABS ( [Sales Amount] ) >= 1e9, FORMAT ( DIVIDE ( [Sales Amount], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million" )
+    & ", margin " & IF ( ABS ( [Margin] ) >= 1e9, FORMAT ( DIVIDE ( [Margin], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Margin], 1e6 ), "$#,0.0" ) & " million" ) & " (" & FORMAT ( [Margin %], "0.0%" ) & ")"
     & ", average selling price " & FORMAT ( [Avg Selling Price], "$#,0.00" )
     & ", " & FORMAT ( [Products Sold], "#,0" ) & " products sold."
 ```
@@ -516,7 +516,7 @@ FORMAT ( [Customers], "#,0" ) & " customers, "
 <details><summary>DAX: Alt Text Stores KPIs</summary>
 
 ```dax
-"Sales " & FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million"
+"Sales " & IF ( ABS ( [Sales Amount] ) >= 1e9, FORMAT ( DIVIDE ( [Sales Amount], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million" )
     & ", " & FORMAT ( [Online Sales %], "0.0%" ) & " online, "
     & FORMAT ( [Open Stores], "#,0" ) & " physical stores open, "
     & FORMAT ( [Sales per Store], "$#,0" ) & " per store and "
@@ -528,8 +528,8 @@ FORMAT ( [Customers], "#,0" ) & " customers, "
 <details><summary>DAX: Alt Text Budget KPIs</summary>
 
 ```dax
-"Sales " & FORMAT ( DIVIDE ( [Sales in Budget Months], 1e6 ), "$#,0.0" ) & " million" & " against a budget of " & FORMAT ( DIVIDE ( [Budget to Date], 1e6 ), "$#,0.0" ) & " million"
-    & ": " & FORMAT ( DIVIDE ( [Sales vs Budget], 1e6 ), "+$#,0.0;-$#,0.0;$0.0" ) & " million ("
+"Sales " & IF ( ABS ( [Sales in Budget Months] ) >= 1e9, FORMAT ( DIVIDE ( [Sales in Budget Months], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Sales in Budget Months], 1e6 ), "$#,0.0" ) & " million" ) & " against a budget of " & IF ( ABS ( [Budget to Date] ) >= 1e9, FORMAT ( DIVIDE ( [Budget to Date], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Budget to Date], 1e6 ), "$#,0.0" ) & " million" )
+    & ": " & IF ( ABS ( [Sales vs Budget] ) >= 1e9, FORMAT ( DIVIDE ( [Sales vs Budget], 1e9 ), "+$#,0.0;-$#,0.0;$0.0" ) & " billion (", FORMAT ( DIVIDE ( [Sales vs Budget], 1e6 ), "+$#,0.0;-$#,0.0;$0.0" ) & " million (" )
     & FORMAT ( [Sales vs Budget %], "+0.0%;-0.0%;0.0%" ) & "), "
     & FORMAT ( [Categories Below Budget], "0" ) & " of " & COUNTROWS ( VALUES ( 'Product'[Category] ) ) & " categories below budget."
 ```
@@ -554,8 +554,8 @@ IF (
 <details><summary>DAX: Alt Text Tooltip KPIs</summary>
 
 ```dax
-[Tooltip Title] & ": sales " & FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million"
-    & ", margin " & FORMAT ( DIVIDE ( [Margin], 1e6 ), "$#,0.0" ) & " million" & " (" & FORMAT ( [Margin %], "0.0%" ) & ")."
+[Tooltip Title] & ": sales " & IF ( ABS ( [Sales Amount] ) >= 1e9, FORMAT ( DIVIDE ( [Sales Amount], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Sales Amount], 1e6 ), "$#,0.0" ) & " million" )
+    & ", margin " & IF ( ABS ( [Margin] ) >= 1e9, FORMAT ( DIVIDE ( [Margin], 1e9 ), "$#,0.0" ) & " billion", FORMAT ( DIVIDE ( [Margin], 1e6 ), "$#,0.0" ) & " million" ) & " (" & FORMAT ( [Margin %], "0.0%" ) & ")."
 ```
 
 </details>

@@ -8,8 +8,8 @@ Checks:
   3. Every table/column/measure that a visual or filter references exists in the semantic model
      (TMDL), so a renamed measure fails CI instead of showing a broken visual after deployment.
   4. Enumerated formatting values (e.g. an axis type, or a tooltip type in the container settings)
-     are ones Power BI recognises. Desktop silently ignores unknown values, so these typos are
-     otherwise invisible.
+     are ones Power BI recognises, in visual.json and in the mobile layout overrides (mobile.json).
+     Desktop silently ignores unknown values, so these typos are otherwise invisible.
   5. PBIR naming rules: folder names match object names, pages.json lists real pages, and every
      registered resource file exists.
   6. Accessibility: every visual has alt text (a measure, or at most 250 characters), and the tab
@@ -106,8 +106,11 @@ def field_references(node, found=None):
     return found
 
 
-def enum_values(prop_schema: dict) -> set[str] | None:
+def enum_values(prop_schema: dict, definitions: dict) -> set[str] | None:
     """Allowed constants of a theme-schema property, if it is an enumeration."""
+    ref = prop_schema.get("$ref", "")
+    if ref.startswith("#/definitions/"):  # shared enums such as verticalAlignment
+        prop_schema = definitions.get(ref.removeprefix("#/definitions/"), {})
     options = prop_schema.get("oneOf") or prop_schema.get("anyOf") or []
     consts = {o["const"] for o in options if isinstance(o, dict) and isinstance(o.get("const"), str)}
     consts |= {e for e in prop_schema.get("enum", []) if isinstance(e, str)}
@@ -150,7 +153,8 @@ def find_property_schemas(node):
     return None
 
 
-def check_formatting_values(visual_file: Path, visual: dict, theme_schema: dict) -> None:
+def check_formatting_values(where: Path, visual_type: str | None, objects: dict, container_objects: dict,
+                            theme_schema: dict) -> None:
     """Enumerated formatting properties (e.g. categoryAxis.axisType) must use a value Power BI knows.
 
     The PBIR schemas don't constrain these values, and Desktop silently ignores unknown ones, so a
@@ -159,15 +163,14 @@ def check_formatting_values(visual_file: Path, visual: dict, theme_schema: dict)
     (title, subtitle, tooltip, ...) in its commonCards definition.
     """
     definitions = theme_schema.get("definitions", {})
-    body = visual.get("visual", {})
-    definition = definitions.get(f"visual-{body.get('visualType')}")
+    definition = definitions.get(f"visual-{visual_type}")
     if definition is not None:
-        check_object_values(visual_file, body.get("objects") or {}, definition)
+        check_object_values(where, objects, definition, definitions)
     if "commonCards" in definitions:
-        check_object_values(visual_file, body.get("visualContainerObjects") or {}, definitions["commonCards"])
+        check_object_values(where, container_objects, definitions["commonCards"], definitions)
 
 
-def check_object_values(visual_file: Path, objects: dict, definition: dict) -> None:
+def check_object_values(where: Path, objects: dict, definition: dict, definitions: dict) -> None:
     if not objects:
         return
     object_schemas = find_object_schemas(definition, set(objects)) or {}
@@ -176,11 +179,11 @@ def check_object_values(visual_file: Path, objects: dict, definition: dict) -> N
         for entry in entries:
             for prop, value in (entry.get("properties") or {}).items():
                 literal = value.get("expr", {}).get("Literal", {}).get("Value") if isinstance(value, dict) else None
-                allowed = enum_values(property_schemas.get(prop, {}))
+                allowed = enum_values(property_schemas.get(prop, {}), definitions)
                 if not (isinstance(literal, str) and allowed and literal.startswith("'")):
                     continue
                 if literal.strip("'") not in allowed:
-                    error(visual_file, f"{object_name}.{prop} = {literal} is not one of {sorted(allowed)}")
+                    error(where, f"{object_name}.{prop} = {literal} is not one of {sorted(allowed)}")
 
 
 ALT_TEXT_MAX = 250  # Power BI's limit for typed alt text
@@ -239,12 +242,17 @@ def check_report(report_dir: Path) -> None:
             visual = json.loads(visual_file.read_text(encoding="utf-8"))
             if visual["name"] != visual_file.parent.name or not NAME_RULE.match(visual["name"]):
                 error(visual_file, f"visual name '{visual['name']}' must match folder and be [A-Za-z0-9_-]")
-            check_formatting_values(visual_file, visual, theme_schema)
+            body = visual.get("visual", {})
+            check_formatting_values(visual_file, body.get("visualType"), body.get("objects") or {},
+                                    body.get("visualContainerObjects") or {}, theme_schema)
             check_alt_text(visual_file, visual)
             web_positions[visual["name"]] = visual["position"]
             mobile_file = visual_file.with_name("mobile.json")
             if mobile_file.exists():
-                mobile_positions[visual["name"]] = json.loads(mobile_file.read_text(encoding="utf-8"))["position"]
+                mobile = json.loads(mobile_file.read_text(encoding="utf-8"))
+                mobile_positions[visual["name"]] = mobile["position"]
+                check_formatting_values(mobile_file, body.get("visualType"), mobile.get("objects") or {},
+                                        mobile.get("visualContainerObjects") or {}, theme_schema)
             if model is None:
                 continue
             for entity, prop in field_references(visual):

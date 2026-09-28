@@ -6,14 +6,14 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 
 ![Executive Overview page: KPI cards, net sales vs budget by month, sales by category and store country, and a category matrix comparing current and prior year](docs/images/executive-overview.png)
 
-*Executive Overview on the 100K-order dataset (2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
+*Executive Overview on the 10M-order dataset (23.7M order lines, 2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
 
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, alt text on every visual (live values for KPI cards), a phone layout for the Executive Overview, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, a product drill-through page and a category tooltip page |
+| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, alt text on every visual (live values for KPI cards), phone layouts for every page and the drill-through, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, a product drill-through page and a category tooltip page |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, accessibility checks (alt text, tab order), generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
 
@@ -34,23 +34,23 @@ The six main pages share one header: Year, Country and Channel slicers that stay
 
 ![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
 
-*The heatmap shows what share of each year's new customers bought again in later years. Its colour scale is capped at 25%, so the differences between cohorts stay visible next to the 100% diagonal.*
+*The heatmap shows what share of each year's new customers bought again in later years. About half of each cohort buys again in any later year. The colour scale runs from 25% to 70%, so the differences between cohorts stay visible next to the 100% diagonal.*
 
 ![Products page: KPI cards, sales vs margin % by subcategory on a log scale, the top 10 products by sales and a price band summary with each band's share of sales and margin](docs/images/products.png)
 
-*Margin rises with price: products under $100 earn 49.6%, products at $1,000 and above earn 63.0%. The $100–499 band brings in 45.6% of sales.*
+*Margin rises with price: products under $100 earn 49.6%, products at $1,000 and above earn 63.0%. The $100–499 band brings in 45.8% of sales.*
 
 ![Stores & Channels page: KPI cards, online vs physical sales by month, physical store sales by country, a table of physical stores with open and close dates, and sales per square metre by country](docs/images/stores-channels.png)
 
-*Online overtook physical stores in 2023 and took 62% of sales in 2024. US stores sell $1,777 per m², more than twice Australia's $782.*
+*Online overtook physical stores in 2023 and took 61% of sales in 2024. Over the ten years, US stores sold $191,365 per m², more than twice Australia's $79,766.*
 
 ![Budget Variance page: KPI cards, a waterfall of the variance to budget by category, sales vs budget % by store country and a category by year heatmap of sales vs budget %](docs/images/budget-variance.png)
 
-*Over 2017–2025 sales beat budget by $11.6M (+5.8%), and the online store accounts for $11.3M of it. 2020 and 2024 missed plan in every category: each budget is the prior year plus a growth target, so a strong year sets a high bar for the next.*
+*Over 2017–2025 sales beat budget by $1.0bn (+4.7%), and the online store beat it by $1.16bn (+15.0%) on its own: physical stores came in $0.16bn under plan, led by the US and the UK. 2020 and 2024 missed plan in every category: each budget is the prior year plus a growth target, so a strong year sets a high bar for the next.*
 
 ![Product Detail drill-through page for the top-selling product: header with brand, category, price band, list price and cost, KPI cards, monthly sales, price, volume and margin by year, customers by age band and gender, and sales by channel](docs/images/product-detail.png)
 
-*Product Detail for the top seller. Its average selling price fell from $2,260 in 2016 to $895 in 2025 while the margin held at about 65%.*
+*Product Detail for the top seller. Its average selling price fell from $2,275 in 2016 to $912 in 2025 while the margin held at about 65%.*
 
 ## Architecture
 
@@ -79,10 +79,10 @@ Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) 
 
 ```powershell
 .\tasks.ps1 setup            # .venv + dependencies
-.\tasks.ps1 all -Size 1m     # download ~66 MB, dbt build + tests, point the model at data\marts
+.\tasks.ps1 all -Size 10m    # download ~680 MB, dbt build + tests, point the model at data\marts
 ```
 
-Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh**. Use `-Size 100k` to get the numbers in the screenshots above, or see [Performance at 10M orders](#performance-at-10m-orders) for the largest release.
+Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop and click **Refresh** (about 5 minutes for 23.7M order lines). The screenshots use this 10M release; `-Size 100k` or `-Size 1m` is quicker for trying things out. See [Performance at 10M orders](#performance-at-10m-orders) for what that scale takes.
 
 - **After changing model files outside Desktop** (editing TMDL, or pulling someone else's changes), close Power BI Desktop completely and open the `.pbip` again. Reopening the file inside a running Desktop session can leave new measures out of the visuals.
 - **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop.
@@ -142,11 +142,11 @@ Key design decisions:
 | `add_lineage_tags.py --check` | hand-written model objects without a `lineageTag`, which Desktop silently drops from visuals | CI, `check` |
 | `TmdlValidator` | TMDL syntax, broken object references, relationship type mismatches, DAX references to missing columns or measures | CI, `check` |
 | Best Practice Analyzer | missing descriptions or format strings, visible FKs, `/` instead of `DIVIDE`, floating point, bi-directional relationships, … | CI (Tabular Editor 2) |
-| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual and container settings, e.g. a tooltip type), visuals without alt text, tab order that doesn't follow the layout | CI, `check` |
+| `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual, container and phone-layout settings, e.g. a tooltip type), visuals without alt text, tab order that doesn't follow the layout | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
 
-Lessons from building the report by editing TMDL and PBIR directly are in the [report design guide](docs/report-design.md#working-with-the-project-outside-desktop).
+The [report design guide](docs/report-design.md) has the page plan, colour system and checklists, and the [lessons](docs/report-design.md#working-with-the-project-outside-desktop) from building the report by editing TMDL and PBIR directly.
 
 ## Performance at 10M orders
 
@@ -166,7 +166,6 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 ## Roadmap
 
 - A first live deployment to Fabric (the pipeline is built and validated in CI; see the status above).
-- Mobile layouts for the remaining pages. The plan, colour system and checklists are in [docs/report-design.md](docs/report-design.md).
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.

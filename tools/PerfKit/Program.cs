@@ -6,7 +6,8 @@
 //   PerfKit replay   <port> <trace.jsonl>             rerun each distinct DAX query cold (cache cleared), then warm
 //   PerfKit vertipaq <port>                           model size by table and column (storage DMVs)
 //   PerfKit syncmeasures <port> <tmdl folder>         copy measure expressions from TMDL into the running model
-//   PerfKit refresh  <port>                           full refresh of the running model, timed
+//   PerfKit refresh  <port>                           full refresh of the running model, timed; like Desktop's
+//                                                     Refresh, it ignores the Sales incremental refresh policy
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AnalysisServices.AdomdClient;
@@ -80,7 +81,9 @@ else if (cmd == "refresh")
     server.Connect(cs);
     var model = server.Databases[0].Model;
     var sw = Stopwatch.StartNew();
-    model.RequestRefresh(Tab.RefreshType.Full);
+    // Applying the policy would split Sales into yearly partitions, and Desktop would save those into
+    // Sales.tmdl on the next Ctrl+S. Desktop's own Refresh keeps the single RangeStart/RangeEnd partition.
+    model.RequestRefresh(Tab.RefreshType.Full, Tab.RefreshPolicyBehavior.Ignore);
     model.SaveChanges();
     Console.WriteLine($"full refresh took {sw.Elapsed.TotalSeconds:N0} s");
     server.Disconnect();

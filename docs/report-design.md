@@ -45,7 +45,7 @@ Taken from a validated, colour-vision-deficiency-checked palette:
 
 - [x] Every visual has alt text (*Format → General → Alt text*): 69 visuals. The KPI rows and freshness labels use
       measures (display folder *Report Helpers\Alt Text*), so a screen reader hears the current values, e.g. "Sales
-      $218.8 million, margin 55.9%, …". `validate_report.py` fails CI when a visual has none or when typed alt text
+      $23.2 billion, margin 55.9%, …". `validate_report.py` fails CI when a visual has none or when typed alt text
       exceeds Power BI's 250 characters.
 - [x] Tab order follows reading order (*View → Selection → Tab order*), on the web and the mobile layout.
       `validate_report.py` fails CI when a visual above, or to the left in the same row, comes later.
@@ -56,8 +56,9 @@ Taken from a validated, colour-vision-deficiency-checked palette:
       Power BI's automatic white label is only 3.2:1 there.
 - [ ] Keyboard-only walkthrough of every page, including slicers and drill-through (manual: *Ctrl+F6* to reach
       the canvas, *Tab* between visuals, *Ctrl+Right arrow* into a visual, *Shift+F10* for drill-through).
-- [x] Mobile layout for the Executive Overview (*View → Mobile layout*): one column with the filters, KPI cards in
-      two columns, the trend and the category and country charts. The category table is left out on phones.
+- [x] Phone layouts (*View → Mobile layout*) for the six pages and Product Detail: one column with the filters on
+      top, KPI cards in a two-column grid, then the charts. The wide tables and heatmaps (category matrix, cohort
+      retention, top 10 products, store list, budget heatmap) are left out on phones. The tooltip page needs none.
 
 ## Performance checklist
 
@@ -94,3 +95,9 @@ These are lessons from building this report by editing TMDL/PBIR files directly:
   (the page name), which is what Desktop writes. The `type` values are `Default` and `Canvas`; any other
   value is silently ignored and the plain tooltip shows instead. `validate_report.py` now checks
   container settings like this one against the theme schema, so CI catches it.
+- **Phone layouts are one file per visual.** A visual appears on the phone canvas (324 units wide) when it
+  has a `mobile.json` next to its `visual.json`: its position there, plus any formatting that differs on
+  phones (`objects`, `visualContainerObjects`). KPI cards need `layout.orientation` 0 (grid) with a
+  column and row count, because the default keeps every tile in one row that scrolls sideways. Button
+  slicer tiles need about 45 units of height: at 37 the bottom of every label was clipped on the phone,
+  with or without text wrap. `validate_report.py` checks these overrides like any other formatting.

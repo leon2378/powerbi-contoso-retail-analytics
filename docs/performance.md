@@ -1,8 +1,7 @@
 # Performance at 10M orders
 
-The report is built and screenshotted on the 100K-order dataset. This page records how the same
-pipeline, model and report behave on SQLBI's 10M-order release, what that test found, and what
-changed as a result.
+The README's screenshots use SQLBI's 10M-order release. This page records how the pipeline, model and
+report behave at that scale, what the test found, and what changed as a result.
 
 ## Test setup
 
@@ -73,18 +72,12 @@ exactly like the mart and requires an exact match, which is stricter and holds a
 ## Reproduce
 
 ```powershell
-# Data and marts in their own folders, so the 100K working copy stays untouched
-.venv\Scripts\python scripts\download_contoso.py --size 10m --raw-dir data\10m\raw
-$env:CONTOSO_RAW_DIR = "data/10m/raw"; $env:CONTOSO_MARTS_DIR = "data/10m/marts"; $env:DUCKDB_PATH = "data/10m/contoso.duckdb"
-.venv\Scripts\dbt build --project-dir transform --profiles-dir transform
-.venv\Scripts\python scripts\set_model_source.py local --data-root "$PWD\data\10m\marts"
+.\tasks.ps1 all -Size 10m   # download (680 MB), dbt build + tests, point the model at data\marts
 
-# Open powerbi\ContosoRetail.pbip, Home > Refresh, then measure with tools\PerfKit
+# Open powerbi\ContosoRetail.pbip, Home > Refresh (about 5 minutes), then measure with tools\PerfKit
 # (the port is in %USERPROFILE%\Microsoft\Power BI Desktop Store App\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt)
 dotnet run --project tools\PerfKit -c Release -- trace <port> trace.jsonl stop.flag   # click through the report, then create stop.flag
 dotnet run --project tools\PerfKit -c Release -- replay <port> trace.jsonl
 dotnet run --project tools\PerfKit -c Release -- vertipaq <port>
 
-# Back to the 100K working copy
-.venv\Scripts\python scripts\set_model_source.py local
 ```

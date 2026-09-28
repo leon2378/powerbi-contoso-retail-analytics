@@ -100,7 +100,7 @@
                             },
                             "value": {
                               "Literal": {
-                                "Value": "0D"
+                                "Value": "0.25D"
                               }
                             }
                           },
@@ -112,7 +112,7 @@
                             },
                             "value": {
                               "Literal": {
-                                "Value": "0.25D"
+                                "Value": "0.7D"
                               }
                             }
                           },

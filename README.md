@@ -175,6 +175,8 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.
 - Publish dbt docs to GitHub Pages from CI.
 
-## Credits
+## Licence and credits
 
-Data: [Contoso Data Generator V2](https://github.com/sql-bi/Contoso-Data-Generator-V2) by SQLBI (synthetic data). See that repository for its licence terms. The budget and RLS entitlements are synthetic and generated in this project.
+The code and documentation in this repository are released under the [MIT licence](LICENSE).
+
+Data: [Contoso Data Generator V2](https://github.com/sql-bi/Contoso-Data-Generator-V2) by SQLBI (synthetic data). It is downloaded when you run the pipeline, not stored here; see that repository for its licence terms. The budget and RLS entitlements are synthetic and generated in this project.

@@ -1,6 +1,6 @@
 # Contoso Retail Analytics: end-to-end Power BI
 
-An end-to-end retail analytics product. It turns raw order data into a governed Power BI semantic model and a six-page report, plus a product drill-through and a hover tooltip page, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and CI/CD to Microsoft Fabric.
+An end-to-end retail analytics product. It turns 23.7M raw order lines into a governed Power BI semantic model and a six-page report, plus a product drill-through and a hover tooltip page, using the practices a production BI team relies on: a tested transformation layer, model-as-code, automated quality gates and a CI/CD pipeline for Microsoft Fabric.
 
 [![CI](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/leon2378/powerbi-contoso-retail-analytics/actions/workflows/ci.yml)
 
@@ -13,9 +13,9 @@ An end-to-end retail analytics product. It turns raw order data into a governed 
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Six **PBIR** pages (enhanced report format) with a colour-blind-safe theme, alt text on every visual (live values for KPI cards), phone layouts for every page and the drill-through, slicers synced across pages, field-parameter metric tiles, titles that follow the selection, a cohort retention heatmap, a top-N product table, store productivity (sales per m²), a budget variance waterfall and heatmap, a product drill-through page and a category tooltip page |
+| **Report** | Six **PBIR** pages (enhanced report format) plus a drill-through and a tooltip page, with **phone layouts**, a colour-blind-safe theme, alt text on every visual (live values for KPI cards), slicers synced across pages, field-parameter metric tiles and titles that follow the selection |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, accessibility checks (alt text, tab order), generated data dictionary |
-| **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no secrets) and DEV → TEST → PROD promotion with approvals |
+| **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no client secret) and DEV → TEST → PROD promotion with approvals. Built and validated in CI; not yet run against a live tenant |
 
 ## Report pages
 
@@ -34,7 +34,7 @@ The six main pages share one header: Year, Country and Channel slicers that stay
 
 ![Customers page: KPI cards, new vs returning customers by year, customers by age band and gender, a cohort retention heatmap and customers by country](docs/images/customers.png)
 
-*The heatmap shows what share of each year's new customers bought again in later years. About half of each cohort buys again in any later year. The colour scale runs from 25% to 70%, so the differences between cohorts stay visible next to the 100% diagonal.*
+*The heatmap shows what share of each year's new customers bought again in each later year: mostly between 35% and 70%. The colour scale runs from 25% to 70%, so the differences between cohorts stay visible next to the 100% diagonal.*
 
 ![Products page: KPI cards, sales vs margin % by subcategory on a log scale, the top 10 products by sales and a price band summary with each band's share of sales and margin](docs/images/products.png)
 
@@ -46,13 +46,13 @@ The six main pages share one header: Year, Country and Channel slicers that stay
 
 ![Budget Variance page: KPI cards, a waterfall of the variance to budget by category, sales vs budget % by store country and a category by year heatmap of sales vs budget %](docs/images/budget-variance.png)
 
-*Over 2017–2025 sales beat budget by $1.0bn (+4.7%), and the online store beat it by $1.16bn (+15.0%) on its own: physical stores came in $0.16bn under plan, led by the US and the UK. 2020 and 2024 missed plan in every category: each budget is the prior year plus a growth target, so a strong year sets a high bar for the next.*
+*Over 2017–2025 sales beat budget by $1.0bn (+4.7%), and the online store alone beat its budget by $1.16bn (+15.0%), while physical stores came in $0.16bn under plan, led by the US and the UK. 2020 and 2024 missed plan in every category: each budget is the prior year plus a growth target, so a strong year sets a high bar for the next.*
 
 ![Product Detail drill-through page for the top-selling product: header with brand, category, price band, list price and cost, KPI cards, monthly sales, price, volume and margin by year, customers by age band and gender, and sales by channel](docs/images/product-detail.png)
 
 *Product Detail for the top seller. Its average selling price fell from $2,275 in 2016 to $912 in 2025 while the margin held at about 65%.*
 
-![Phone layouts of the Executive Overview, Sales Performance and Product Detail pages: the slicers across the top, KPI cards in two columns, the metric buttons two per row, and the product header above its KPI cards](docs/images/phone-layouts.png)
+![Phone layouts of the Executive Overview, Sales Performance and Product Detail pages: the slicers across the top, KPI cards in two columns, the metric tiles two per row, and the product header above its KPI cards](docs/images/phone-layouts.png)
 
 *The first screen of three phone layouts. Every page and the drill-through has one: KPI cards in two columns, then the charts, with the wide tables and heatmaps left for the desktop view.*
 
@@ -79,7 +79,7 @@ The semantic model has **one** data-access function, `fnLoadTable`. `scripts/set
 
 ## Quick start (local, no cloud needed)
 
-Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (a recent version; if your version lists them under *Options → Preview features*, enable the Power BI Project, TMDL and PBIR options), and optionally the .NET 8 SDK for the TMDL validator and PerfKit.
+Prerequisites: Python 3.11+, [Power BI Desktop](https://aka.ms/pbidesktopstore) (a recent version; if your version lists them under *Options → Preview features*, enable the Power BI Project, TMDL and PBIR options), and optionally the .NET 8 SDK or later for the TMDL validator and PerfKit.
 
 ```powershell
 .\tasks.ps1 setup            # .venv + dependencies
@@ -163,7 +163,7 @@ The screenshots above come from SQLBI's 10M-order release (23.7M order lines, 1.
 
 ## Deploying to Microsoft Fabric
 
-`main` deploys to DEV automatically. TEST and PROD are promoted manually, and PROD needs an approval. The pipeline builds the marts, publishes them as Delta tables, deploys the model and report with fabric-cicd, binds the data connection and runs an enhanced refresh. One-time setup (workspaces, service principal with OIDC, connection, GitHub environments) is in **[docs/deployment.md](docs/deployment.md)**.
+Once enabled, `main` deploys to DEV automatically. TEST and PROD are promoted manually, and PROD needs an approval. The pipeline builds the marts, publishes them as Delta tables, deploys the model and report with fabric-cicd, binds the data connection and runs an enhanced refresh. One-time setup (workspaces, service principal with OIDC, connection, GitHub environments) is in **[docs/deployment.md](docs/deployment.md)**.
 
 Status: the deployable build (the model switched to the Fabric source) is produced and validated in every CI run, but it has not been deployed to a live tenant yet. That needs a Fabric capacity (a trial works) and the one-time setup; until the `FABRIC_ENABLED` variable is set, the deploy workflow skips itself. For a first deploy from your own machine, `FABRIC_AUTH=browser` signs in through the browser, so the Azure CLI isn't needed.
 

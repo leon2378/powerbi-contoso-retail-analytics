@@ -13,7 +13,7 @@ An end-to-end retail analytics product. It turns 23.7M raw order lines into a go
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
 | **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test, all browsable with the lineage graph in the published [dbt docs](https://leon2378.github.io/powerbi-contoso-retail-analytics/) |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
-| **Report** | Six **PBIR** pages (enhanced report format) plus a drill-through and a tooltip page, with **phone layouts**, a colour-blind-safe theme, alt text on every visual (live values for KPI cards), slicers synced across pages, field-parameter metric tiles and titles that follow the selection |
+| **Report** | Six **PBIR** pages (enhanced report format) plus a drill-through and a tooltip page, with **phone layouts**, a colour-blind-safe theme, alt text on every visual (live values for KPI cards), [keyboard navigation tested](#accessibility) on every page, slicers synced across pages, field-parameter metric tiles and titles that follow the selection |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, accessibility checks (alt text, tab order), generated data dictionary |
 | **Deploy** | Delta tables to a **Fabric Lakehouse**, model and report via **fabric-cicd**, GitHub Actions with OIDC (no client secret) and DEV → TEST → PROD promotion with approvals. Built and validated in CI; not yet run against a live tenant |
 
@@ -55,6 +55,17 @@ The six main pages share one header: Year, Country and Channel slicers that stay
 ![Phone layouts of the Executive Overview, Sales Performance and Product Detail pages: the slicers across the top, KPI cards in two columns, the metric tiles two per row, and the product header above its KPI cards](docs/images/phone-layouts.png)
 
 *The first screen of three phone layouts. Every page and the drill-through has one: KPI cards in two columns, then the charts, with the wide tables and heatmaps left for the desktop view.*
+
+## Accessibility
+
+Every page was walked through with the keyboard alone in Power BI Desktop, logging at each step what a screen reader announces (the focused element, read through Windows UI Automation).
+
+- **Reading order.** *Ctrl+F6* lands on the page title and *Tab* follows the layout on all seven pages. Every visual announces its title and alt text, and the KPI rows read out their current values, e.g. "Sales $23.2 billion, margin 55.9%, 9,887,613 orders, …".
+- **Interaction.** Slicers, the metric buttons and chart data points all work from the keyboard. *Shift+F10* → *Drill through* opens Product Detail from the Top 10 table, and the back button is the first stop on that page.
+- **What it caught.** Power BI tabs from the highest `tabOrder` to the lowest, so the report's first version took keyboard users through every page backwards. The order is fixed, and `validate_report.py` now fails CI if it regresses.
+- **Known limits, seen in Desktop.** *Tab* stops on a text box's editing menu (*Shift+Tab* moves on), and the category tooltip page only opens on hover, so keyboard users hear the data point's values instead.
+
+Colour never carries meaning alone (legends, direct labels, + and − signs on every variance) and text contrast is at least 4.5:1. The full checklist is in the [report design guide](docs/report-design.md#accessibility-checklist).
 
 ## Architecture
 

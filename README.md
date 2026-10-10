@@ -8,6 +8,10 @@ An end-to-end retail analytics product. It turns 23.7M raw order lines into a go
 
 *Executive Overview on the 10M-order dataset (23.7M order lines, 2016–2025). Sales vs budget compares the same months on both sides; YoY % comes from the Time Intelligence calculation group.*
 
+![Animated walkthrough in Power BI Desktop: clicking the Computers bar cross-filters the Executive Overview; on Sales Performance the Margin % and Orders tiles and the YTD time calculation change every chart and its title; on Products a right-click on the top product drills through to Product Detail, and the back button returns to Products](docs/images/demo.gif)
+
+*The report in use, on the same data: cross-filtering, the metric tiles and the time calculation, then a drill-through to Product Detail and back.*
+
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |

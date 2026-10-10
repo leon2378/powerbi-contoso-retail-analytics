@@ -14,7 +14,8 @@ Power BI semantic model imports.
 - **Tests**: data tests, unit tests, a source ↔ mart reconciliation test and a check on the order-grain assumption
   behind the fast `[Orders]` measure.
 
-Use the button at the bottom right of any page to open the lineage graph.
+Use the button at the bottom right of any page to open the lineage graph. It ends at the Power BI report, declared as
+an exposure (`contoso_retail_power_bi_report`), so you can see which marts the report depends on.
 
 GitHub Actions rebuilds this site whenever the dbt project changes on `main`. It is built on the synthetic fixture
 data that CI uses, which has the same schema as the SQLBI release, so the models, columns, tests and lineage match

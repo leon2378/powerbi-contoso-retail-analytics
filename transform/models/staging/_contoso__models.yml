@@ -1,36 +1,134 @@
 models:
   - name: stg_contoso__sales
     description: Order lines, renamed to snake_case and cast to warehouse types. Amounts in USD.
-    columns:
-      - name: order_key
-        data_tests: [not_null]
-      - name: quantity
-        data_tests:
-          - accepted_range:
-              arguments:
-                min_value: 1
-      - name: currency_code
-        data_tests:
-          - accepted_values:
-              arguments:
-                values: ["USD", "EUR", "GBP", "CAD", "AUD"]
     data_tests:
       - unique_combination:
           arguments:
             columns: ["order_key", "line_number"]
+    columns:
+      - name: order_key
+        description: Order number.
+        data_tests: [not_null]
+      - name: line_number
+        description: Line within the order, starting at 0.
+      - name: order_date
+        description: Date the order was placed.
+      - name: delivery_date
+        description: Date the order was delivered.
+      - name: customer_key
+        description: Customer who placed the order.
+      - name: store_key
+        description: Store that made the sale (999999 is the online store).
+      - name: product_key
+        description: Product sold on the line.
+      - name: quantity
+        description: Units sold on the line.
+        data_tests:
+          - accepted_range:
+              arguments:
+                min_value: 1
+      - name: unit_price_usd
+        description: List price per unit in USD, rounded to 4 decimals (the source has 5).
+      - name: net_price_usd
+        description: Price per unit after discount in USD, rounded to 4 decimals.
+      - name: unit_cost_usd
+        description: Cost per unit in USD, rounded to 4 decimals.
+      - name: currency_code
+        description: ISO currency of the order, upper case.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["USD", "EUR", "GBP", "CAD", "AUD"]
+      - name: exchange_rate
+        description: Converts USD into the order currency on the order date.
 
   - name: stg_contoso__customers
-    description: Customers with PII-like columns removed (see model header).
+    description: >
+      Customers with PII-like columns removed: street address, coordinates, title, company and
+      vehicle are dropped (see the model header).
     columns:
       - name: customer_key
+        description: Customer identifier.
         data_tests: [not_null, unique]
+      - name: customer_name
+        description: Given name and surname (synthetic).
+      - name: gender
+        description: Male, Female or Unknown, normalised from the source's lower-case values.
+      - name: birth_date
+        description: Date of birth.
+      - name: age
+        description: Age in years, as recorded in the source.
+      - name: occupation
+        description: Occupation, null when blank.
+      - name: city
+        description: City of the customer's address.
+      - name: state_code
+        description: State or province code.
+      - name: state_name
+        description: State or province name.
+      - name: postal_code
+        description: Postal code.
+      - name: country_code
+        description: Two-letter country code, upper case.
+      - name: country_name
+        description: Country name.
+      - name: continent
+        description: Continent of the customer's country.
 
   - name: stg_contoso__products
+    description: Products, renamed and cast. Prices and costs in USD, rounded to 4 decimals.
     columns:
       - name: product_key
+        description: Product identifier.
         data_tests: [not_null, unique]
+      - name: product_code
+        description: Product code from the source catalogue.
+      - name: product_name
+        description: Product name.
+      - name: manufacturer
+        description: Manufacturer.
+      - name: brand
+        description: Brand.
+      - name: color
+        description: Colour.
+      - name: list_price_usd
+        description: Current list price in USD.
+      - name: standard_cost_usd
+        description: Current standard cost in USD.
+      - name: category_key
+        description: Product category identifier.
+      - name: category_name
+        description: Product category.
+      - name: subcategory_key
+        description: Product subcategory identifier.
+      - name: subcategory_name
+        description: Product subcategory.
 
   - name: stg_contoso__stores
+    description: >
+      Stores, renamed and cast. Flags the generator's single online store (GeoAreaKey = -1) and
+      turns its placeholder country code '--' into null.
     columns:
       - name: store_key
+        description: Store identifier.
         data_tests: [not_null, unique]
+      - name: store_code
+        description: Store code (-1 for the online store).
+      - name: store_name
+        description: Store name, from the source's Description.
+      - name: is_online
+        description: True for the online store.
+      - name: country_code
+        description: Two-letter country code, null for the online store.
+      - name: country_name
+        description: Country name, null when blank.
+      - name: state_name
+        description: State or region, null when blank.
+      - name: open_date
+        description: Date the store opened.
+      - name: close_date
+        description: Date the store closed, null while it is open.
+      - name: square_meters
+        description: Selling space in square metres, null for the online store.
+      - name: status
+        description: Status from the source (Closed or Restructured), null when blank.

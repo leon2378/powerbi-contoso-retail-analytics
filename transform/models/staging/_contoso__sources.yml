@@ -21,6 +21,7 @@ sources:
           - name: CustomerKey
             data_tests: [not_null, unique]
       - name: product
+        description: Product catalogue with category, subcategory, list price and cost.
         columns:
           - name: ProductKey
             data_tests: [not_null, unique]

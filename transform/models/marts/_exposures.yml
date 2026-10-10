@@ -1,0 +1,21 @@
+exposures:
+  - name: contoso_retail_power_bi_report
+    label: Contoso Retail Power BI report
+    type: dashboard
+    maturity: high
+    url: https://github.com/leon2378/powerbi-contoso-retail-analytics#report-pages
+    description: >
+      The Power BI semantic model and report in powerbi/ContosoRetail.pbip: six pages, a product
+      drill-through and a category tooltip page. The model imports these marts, as Parquet files
+      locally or as Delta tables from a Fabric Lakehouse, and scripts/check_model_contract.py fails
+      CI if a column it reads changes here.
+    owner:
+      name: Leon Lusbo
+    depends_on:
+      - ref('fct_sales')
+      - ref('fct_sales_budget')
+      - ref('dim_date')
+      - ref('dim_customer')
+      - ref('dim_product')
+      - ref('dim_store')
+      - ref('security_user_access')

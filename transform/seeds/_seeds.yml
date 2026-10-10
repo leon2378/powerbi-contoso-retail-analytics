@@ -5,8 +5,10 @@ seeds:
       fct_sales_budget. Owned by Finance; categories not listed fall back to var default_budget_growth.
     columns:
       - name: category_name
+        description: Product category, matching dim_product.category_name.
         data_tests: [not_null, unique]
       - name: growth_rate
+        description: Growth target as a fraction, e.g. 0.04 for +4% (between -50% and +100%).
         data_tests:
           - accepted_range:
               arguments:
@@ -15,5 +17,10 @@ seeds:
 
   - name: rls_user_access
     description: >
-      Demo entitlements for the "Regional Manager" RLS role. Replace the example.com UPNs with real
-      Microsoft Entra user principal names before testing in the Power BI service.
+      Demo entitlements for the "Regional Manager" RLS role. Replace the contoso.example UPNs with
+      real Microsoft Entra user principal names before testing in the Power BI service.
+    columns:
+      - name: user_principal_name
+        description: The user's sign-in name (UPN).
+      - name: country_code
+        description: A store country code the user may see, or ONLINE for the online store.

@@ -3,7 +3,10 @@ models:
   # Facts
   # ---------------------------------------------------------------------------------------------
   - name: fct_sales
-    description: Order lines. Grain = (order_key, line_number). Amounts in USD unless suffixed _local.
+    description: >
+      Order lines, the fact table behind every sales measure in the Power BI model. Grain =
+      (order_key, line_number). Amounts are in USD unless suffixed _local; ratios such as margin %
+      are left to DAX so they aggregate correctly.
     data_tests:
       - unique_combination:
           arguments:
@@ -11,12 +14,17 @@ models:
     columns:
       - name: order_key
         data_type: bigint
+        description: Order number. An order has one or more lines.
         constraints: [{ type: not_null }]
       - name: line_number
         data_type: integer
+        description: >
+          Line within the order, starting at 0. The [Orders] measure counts line-0 rows instead of
+          distinct order numbers, which the assert_orders_have_one_first_line test guards.
         constraints: [{ type: not_null }]
       - name: order_date
         data_type: date
+        description: Date the order was placed. The active relationship to the calendar.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -25,6 +33,7 @@ models:
                 field: date
       - name: delivery_date
         data_type: date
+        description: Date the order was delivered. Joined through an inactive relationship for sales by delivery date.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -33,6 +42,7 @@ models:
                 field: date
       - name: customer_key
         data_type: integer
+        description: Customer who placed the order (dim_customer).
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -41,6 +51,7 @@ models:
                 field: customer_key
       - name: store_key
         data_type: integer
+        description: Store that made the sale (dim_store), including the online store.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -49,6 +60,7 @@ models:
                 field: store_key
       - name: product_key
         data_type: integer
+        description: Product sold on the line (dim_product).
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -60,6 +72,7 @@ models:
         description: ISO currency of the order (derived from the customer's country).
       - name: quantity
         data_type: integer
+        description: Units sold on the line, at least 1.
         data_tests:
           - accepted_range:
               arguments:
@@ -76,11 +89,13 @@ models:
                 min_value: 0
       - name: cost_amount_usd
         data_type: decimal(18, 4)
+        description: quantity x unit cost. Sales Amount minus this is the margin.
       - name: net_amount_local
         data_type: decimal(18, 4)
         description: Net amount converted to the order currency at the order-date exchange rate.
       - name: delivery_days
         data_type: integer
+        description: Days from order to delivery. 0 for physical stores (same day), 1 or more for online orders.
         data_tests:
           - accepted_range:
               arguments:
@@ -88,7 +103,10 @@ models:
                 max_value: 60
 
   - name: fct_sales_budget
-    description: Synthetic monthly budget at category x store-country grain (see model header).
+    description: >
+      Synthetic monthly sales budget at month x product category x store country grain, coarser
+      than the actuals, so the Power BI model relates it to Product and Store through many-to-many
+      relationships. Budget = the same month a year earlier x (1 + the category's growth target).
     data_tests:
       - unique_combination:
           arguments:
@@ -96,6 +114,7 @@ models:
     columns:
       - name: month_start_date
         data_type: date
+        description: First day of the budget month.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -104,6 +123,7 @@ models:
                 field: date
       - name: category_key
         data_type: integer
+        description: Product category the budget is for (dim_product.category_key).
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -112,6 +132,7 @@ models:
                 field: category_key
       - name: store_country_code
         data_type: varchar
+        description: Store country the budget is for (dim_store.country_code); ONLINE for the online store.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:
@@ -120,104 +141,255 @@ models:
                 field: country_code
       - name: budget_amount_usd
         data_type: decimal(18, 4)
+        description: >
+          Budgeted net sales in USD: the same month's actuals a year earlier x (1 + growth target from
+          the budget_growth_targets seed, or var default_budget_growth).
 
   # ---------------------------------------------------------------------------------------------
   # Dimensions
   # ---------------------------------------------------------------------------------------------
   - name: dim_date
-    description: Calendar covering complete years from first order to last delivery.
+    description: >
+      Calendar with one row per day, covering complete years from the first order to the last
+      delivery so DAX time intelligence always sees whole years. Marked as the date table in Power BI.
     columns:
-      - { name: date, data_type: date, constraints: [{ type: not_null }], data_tests: [unique] }
-      - { name: date_key, data_type: integer }
-      - { name: year, data_type: integer }
-      - { name: quarter_number, data_type: integer }
-      - { name: quarter, data_type: varchar }
-      - { name: year_quarter, data_type: varchar }
-      - { name: year_quarter_number, data_type: integer }
-      - { name: month_number, data_type: integer }
-      - { name: month_name, data_type: varchar }
-      - { name: month_short, data_type: varchar }
-      - { name: year_month, data_type: varchar }
-      - { name: year_month_number, data_type: integer }
-      - { name: month_start_date, data_type: date }
-      - { name: day_of_week_number, data_type: integer }
-      - { name: day_of_week, data_type: varchar }
-      - { name: day_of_week_short, data_type: varchar }
-      - { name: day_of_month, data_type: integer }
-      - { name: iso_week_number, data_type: integer }
-      - { name: is_weekend, data_type: boolean }
+      - name: date
+        data_type: date
+        description: The calendar day (primary key).
+        constraints: [{ type: not_null }]
+        data_tests: [unique]
+      - name: date_key
+        data_type: integer
+        description: The day as a yyyymmdd number, e.g. 20251231.
+      - name: year
+        data_type: integer
+        description: Calendar year.
+      - name: quarter_number
+        data_type: integer
+        description: Quarter of the year, 1 to 4.
+      - name: quarter
+        data_type: varchar
+        description: Quarter label, Q1 to Q4.
+      - name: year_quarter
+        data_type: varchar
+        description: Year and quarter, e.g. "2025 Q4".
+      - name: year_quarter_number
+        data_type: integer
+        description: year x 10 + quarter, e.g. 20254. Sort key for year_quarter.
+      - name: month_number
+        data_type: integer
+        description: Month of the year, 1 to 12. Sort key for the month names.
+      - name: month_name
+        data_type: varchar
+        description: Month name, e.g. "December".
+      - name: month_short
+        data_type: varchar
+        description: Abbreviated month name, e.g. "Dec".
+      - name: year_month
+        data_type: varchar
+        description: Month and year, e.g. "Dec 2025".
+      - name: year_month_number
+        data_type: integer
+        description: year x 100 + month, e.g. 202512. Sort key for year_month and the budget's month grain in DAX.
+      - name: month_start_date
+        data_type: date
+        description: First day of the month. Gives line charts a continuous monthly axis.
+      - name: day_of_week_number
+        data_type: integer
+        description: ISO day of the week, Monday = 1 to Sunday = 7. Sort key for the weekday names.
+      - name: day_of_week
+        data_type: varchar
+        description: Weekday name, e.g. "Monday".
+      - name: day_of_week_short
+        data_type: varchar
+        description: Abbreviated weekday name, e.g. "Mon".
+      - name: day_of_month
+        data_type: integer
+        description: Day of the month, 1 to 31.
+      - name: iso_week_number
+        data_type: integer
+        description: ISO 8601 week of the year.
+      - name: is_weekend
+        data_type: boolean
+        description: True on Saturdays and Sundays.
       - name: date_with_sales
         data_type: boolean
         description: True up to the last order date. Used by the Time Intelligence calculation group.
 
   - name: dim_customer
+    description: >
+      One row per customer, including prospects who never bought, with the age band and
+      acquisition cohort used on the Customers page. Street address and coordinates are dropped in
+      staging (data minimisation).
     columns:
-      - { name: customer_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
-      - { name: customer_name, data_type: varchar }
-      - { name: gender, data_type: varchar }
-      - { name: age, data_type: integer }
-      - { name: age_band, data_type: varchar }
-      - { name: age_band_sort, data_type: integer }
-      - { name: occupation, data_type: varchar }
-      - { name: city, data_type: varchar }
-      - { name: state_code, data_type: varchar }
-      - { name: state_name, data_type: varchar }
-      - { name: postal_code, data_type: varchar }
-      - { name: country_code, data_type: varchar }
-      - { name: country_name, data_type: varchar }
-      - { name: continent, data_type: varchar }
+      - name: customer_key
+        data_type: integer
+        description: Customer identifier from the source (primary key).
+        constraints: [{ type: not_null }]
+        data_tests: [unique]
+      - name: customer_name
+        data_type: varchar
+        description: Given name and surname (synthetic).
+      - name: gender
+        data_type: varchar
+        description: Male, Female or Unknown.
+      - name: age
+        data_type: integer
+        description: Age in years, as recorded in the source.
+      - name: age_band
+        data_type: varchar
+        description: Under 25, 25-34, 35-44, 45-54, 55-64, 65+ or Unknown.
+      - name: age_band_sort
+        data_type: integer
+        description: Sort key for age_band, 1 to 6 (99 for Unknown).
+      - name: occupation
+        data_type: varchar
+        description: Occupation, null when the source leaves it blank.
+      - name: city
+        data_type: varchar
+        description: City of the customer's address.
+      - name: state_code
+        data_type: varchar
+        description: State or province code.
+      - name: state_name
+        data_type: varchar
+        description: State or province name.
+      - name: postal_code
+        data_type: varchar
+        description: Postal code.
+      - name: country_code
+        data_type: varchar
+        description: Two-letter country code, e.g. US.
+      - name: country_name
+        data_type: varchar
+        description: Country name.
+      - name: continent
+        data_type: varchar
+        description: Continent of the customer's country.
       - name: first_order_date
         data_type: date
         description: Date of the customer's first order ever. Drives "New Customers".
-      - { name: acquisition_cohort, data_type: varchar }
-      - { name: has_purchased, data_type: boolean }
+      - name: acquisition_cohort
+        data_type: varchar
+        description: Year of the first order as text, e.g. "2019", or "No purchase". Rows of the cohort retention heatmap.
+      - name: has_purchased
+        data_type: boolean
+        description: True when the customer has at least one order.
 
   - name: dim_product
+    description: >
+      One row per product with its category hierarchy and price band. Category is the grain the
+      budget is set at.
     columns:
-      - { name: product_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
-      - { name: product_code, data_type: varchar }
-      - { name: product_name, data_type: varchar }
-      - { name: manufacturer, data_type: varchar }
-      - { name: brand, data_type: varchar }
-      - { name: color, data_type: varchar }
-      - { name: category_key, data_type: integer, constraints: [{ type: not_null }] }
-      - { name: category_name, data_type: varchar }
-      - { name: subcategory_key, data_type: integer }
-      - { name: subcategory_name, data_type: varchar }
-      - { name: list_price_usd, data_type: "decimal(18,4)" }
-      - { name: standard_cost_usd, data_type: "decimal(18,4)" }
-      - { name: price_band, data_type: varchar }
-      - { name: price_band_sort, data_type: integer }
+      - name: product_key
+        data_type: integer
+        description: Product identifier from the source (primary key).
+        constraints: [{ type: not_null }]
+        data_tests: [unique]
+      - name: product_code
+        data_type: varchar
+        description: Product code from the source catalogue.
+      - name: product_name
+        data_type: varchar
+        description: Product name, e.g. "Contoso Projector 1080p X980 White".
+      - name: manufacturer
+        data_type: varchar
+        description: Manufacturer.
+      - name: brand
+        data_type: varchar
+        description: Brand.
+      - name: color
+        data_type: varchar
+        description: Colour.
+      - name: category_key
+        data_type: integer
+        description: Product category identifier. The budget's product grain.
+        constraints: [{ type: not_null }]
+      - name: category_name
+        data_type: varchar
+        description: Product category, e.g. "Computers".
+      - name: subcategory_key
+        data_type: integer
+        description: Product subcategory identifier.
+      - name: subcategory_name
+        data_type: varchar
+        description: Product subcategory, e.g. "Laptops".
+      - name: list_price_usd
+        data_type: "decimal(18,4)"
+        description: Current list price in USD (an attribute, not additive).
+      - name: standard_cost_usd
+        data_type: "decimal(18,4)"
+        description: Current standard cost in USD (an attribute, not additive).
+      - name: price_band
+        data_type: varchar
+        description: List price band, Under $100, $100-499, $500-999 or $1,000+.
+      - name: price_band_sort
+        data_type: integer
+        description: Sort key for price_band, 1 to 4.
 
   - name: dim_store
+    description: >
+      One row per store, including the single online store. The online store gets the
+      pseudo-country ONLINE so the budget and row-level security, both at store-country grain, can
+      address it.
     columns:
-      - { name: store_key, data_type: integer, constraints: [{ type: not_null }], data_tests: [unique] }
-      - { name: store_code, data_type: integer }
-      - { name: store_name, data_type: varchar }
+      - name: store_key
+        data_type: integer
+        description: Store identifier from the source (primary key).
+        constraints: [{ type: not_null }]
+        data_tests: [unique]
+      - name: store_code
+        data_type: integer
+        description: Store code from the source (-1 for the online store).
+      - name: store_name
+        data_type: varchar
+        description: Store name, e.g. "Contoso Store Kansas".
       - name: channel
         data_type: varchar
+        description: Online or Physical.
         data_tests:
           - accepted_values:
               arguments:
                 values: ["Online", "Physical"]
-      - { name: country_code, data_type: varchar, constraints: [{ type: not_null }] }
-      - { name: country_name, data_type: varchar }
-      - { name: state_name, data_type: varchar }
-      - { name: open_date, data_type: date }
-      - { name: close_date, data_type: date }
-      - { name: square_meters, data_type: integer }
-      - { name: status, data_type: varchar }
+      - name: country_code
+        data_type: varchar
+        description: Two-letter country code of the store, ONLINE for the online store. Row-level security filters on it.
+        constraints: [{ type: not_null }]
+      - name: country_name
+        data_type: varchar
+        description: Country name, "Online" for the online store.
+      - name: state_name
+        data_type: varchar
+        description: State or region of the store, "Online" for the online store.
+      - name: open_date
+        data_type: date
+        description: Date the store opened.
+      - name: close_date
+        data_type: date
+        description: Date the store closed, null while it is open.
+      - name: square_meters
+        data_type: integer
+        description: Selling space in square metres, null for the online store.
+      - name: status
+        data_type: varchar
+        description: Status from the source (Closed or Restructured), otherwise Closed when the store has a close date, else Open.
 
   - name: security_user_access
-    description: RLS entitlements (user principal name -> store country code).
+    description: >
+      Row-level security entitlements: which store countries each user may see. Read by the
+      Regional Manager role in Power BI, which compares user_principal_name with USERPRINCIPALNAME().
     data_tests:
       - unique_combination:
           arguments:
             columns: ["user_principal_name", "country_code"]
     columns:
-      - { name: user_principal_name, data_type: varchar, constraints: [{ type: not_null }] }
+      - name: user_principal_name
+        data_type: varchar
+        description: The user's sign-in name (UPN), lower-cased.
+        constraints: [{ type: not_null }]
       - name: country_code
         data_type: varchar
+        description: Store country code the user may see (dim_store.country_code); ONLINE grants the online store.
         constraints: [{ type: not_null }]
         data_tests:
           - relationships:

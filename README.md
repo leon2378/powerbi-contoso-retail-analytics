@@ -11,7 +11,7 @@ An end-to-end retail analytics product. It turns 23.7M raw order lines into a go
 | Layer | What's here |
 |---|---|
 | **Ingest** | SQLBI's Contoso V2 dataset (100K to 10M orders) downloaded as Parquet, plus a synthetic fixture generator for CI |
-| **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test |
+| **Transform** | dbt + DuckDB: staging views → star-schema marts with **enforced contracts**, data tests, **unit tests** and a source-reconciliation test, all browsable with the lineage graph in the published [dbt docs](https://leon2378.github.io/powerbi-contoso-retail-analytics/) |
 | **Semantic model** | Power BI project (PBIP) in **TMDL**: import mode with **incremental refresh**, a **calculation group** for time intelligence, a **field parameter**, **dynamic RLS**, a budget at a coarser grain via many-to-many relationships, cohort retention measures and dynamic format strings |
 | **Report** | Six **PBIR** pages (enhanced report format) plus a drill-through and a tooltip page, with **phone layouts**, a colour-blind-safe theme, alt text on every visual (live values for KPI cards), slicers synced across pages, field-parameter metric tiles and titles that follow the selection |
 | **Quality gates** | TMDL validation with the Tabular Object Model, DAX reference checks, **Best Practice Analyzer**, dbt ↔ model contract check, lineage-tag check, PBIR schema and field-reference checks, accessibility checks (alt text, tab order), generated data dictionary |
@@ -91,7 +91,7 @@ Then open `powerbi\ContosoRetail.pbip` in Power BI Desktop, click **Refresh** (a
 - **After changing model files outside Desktop** (editing TMDL, or pulling someone else's changes), close Power BI Desktop completely and open the `.pbip` again. Reopening the file inside a running Desktop session can leave new measures out of the visuals.
 - **Before committing**, run `.\tasks.ps1 model-reset` so your local data path isn't committed (CI warns if it is), then `.\tasks.ps1 model-local` to keep working in Desktop. A save in Desktop also rewrites the report and model files in its own format (newer schema versions, reordered properties), so check `git status` for changes you didn't make.
 
-Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site), `dictionary`, `deploy`. Run `.\tasks.ps1 help` for the full list.
+Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site, also [published](https://leon2378.github.io/powerbi-contoso-retail-analytics/) from `main`), `dictionary`, `deploy`. Run `.\tasks.ps1 help` for the full list.
 
 ## Repository layout
 
@@ -112,7 +112,7 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site)
 │   └── bpa-rules.json        Best Practice Analyzer rules (severity 3 fails CI)
 ├── tools/PerfKit/            .NET tool: trace, replay, size and refresh the model running in Desktop
 ├── docs/                     data dictionary (generated), deployment, report-design and performance guides, screenshots
-└── .github/workflows/        ci.yml (quality gates), deploy.yml (Fabric CD)
+└── .github/workflows/        ci.yml (quality gates), docs.yml (dbt docs to GitHub Pages), deploy.yml (Fabric CD)
 ```
 
 ## The model
@@ -173,7 +173,6 @@ Status: the deployable build (the model switched to the Fabric source) is produc
 - Direct Lake variant for the 100M-order dataset.
 - Budget write-back with Power BI translytical task flows (Fabric User Data Functions).
 - Usage and refresh monitoring (Fabric workspace monitoring) with alerts.
-- Publish dbt docs to GitHub Pages from CI.
 
 ## Licence and credits
 

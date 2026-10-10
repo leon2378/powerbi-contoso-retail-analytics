@@ -1,0 +1,73 @@
+name: dbt docs
+
+# Publishes the dbt documentation site (models, columns, tests, lineage graph) to GitHub Pages:
+# https://leon2378.github.io/powerbi-contoso-retail-analytics/
+# It is built on the same synthetic fixture data as CI, so no data download is needed.
+# One-time setup: Settings → Pages → Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "transform/**"
+      - "scripts/make_fixture_data.py"
+      - "requirements.txt"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build dbt docs
+    runs-on: ubuntu-latest
+    env:
+      CONTOSO_RAW_DIR: data/raw
+      CONTOSO_MARTS_DIR: data/marts
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Generate fixture data (same schema as the SQLBI release)
+        run: |
+          python scripts/make_fixture_data.py --out data/raw
+          mkdir -p data/marts data/warehouse
+
+      # The catalog (column types) is read from the built tables, and a failing test stops the publish.
+      - name: dbt build
+        run: dbt build --project-dir transform --profiles-dir transform
+
+      - name: dbt docs generate
+        run: |
+          dbt docs generate --project-dir transform --profiles-dir transform
+          mkdir -p site
+          cp transform/target/index.html transform/target/manifest.json transform/target/catalog.json site/
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write # verifies the deployment comes from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

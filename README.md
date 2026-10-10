@@ -156,7 +156,7 @@ The [report design guide](docs/report-design.md) has the page plan, colour syste
 
 The screenshots above come from SQLBI's 10M-order release (23.7M order lines, 1.7M customers), and this is what that scale takes. Details, method and how to reproduce are in **[docs/performance.md](docs/performance.md)**.
 
-- `dbt build` (11 models, 2 seeds, 45 tests): **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **845 MB**.
+- `dbt build` (11 models, 2 seeds, 45 tests): **27 s**. Full refresh in Power BI Desktop: **4 min 13 s**. Model size in memory: **742 MB**, 10.5% less after a size pass that changed no query result: no attribute hierarchies on columns that are only aggregated, and no customer coordinates.
 - Every query the report sends was recorded during a click-through and replayed on a cleared cache: **93% run under 1 s cold** (up from 76%), the 90th percentile dropped from 3.7 s to **0.83 s**, and warm queries take 6 ms (median).
 - The gains came from counting orders by their first line where no product filter applies (a dbt test guards the assumption), a cheaper repeat-customer count, and Units instead of Orders in the brand table. The six queries still above 1 s cold count distinct customers among 1.7M.
 - The run also caught a check that only failed at scale: sub-cent rounding across 23.7M lines broke the source ↔ mart reconciliation test's $1 tolerance. It now rounds like the mart and requires an exact match.

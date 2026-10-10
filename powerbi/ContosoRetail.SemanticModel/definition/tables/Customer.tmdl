@@ -99,20 +99,6 @@ table Customer
 		summarizeBy: none
 		sourceColumn: continent
 
-	column Latitude
-		dataType: double
-		lineageTag: df0caba9-096f-4f0c-9b9e-b146b1150fba
-		dataCategory: Latitude
-		summarizeBy: none
-		sourceColumn: latitude
-
-	column Longitude
-		dataType: double
-		lineageTag: 514669e4-5954-46d9-80ef-e91c88991874
-		dataCategory: Longitude
-		summarizeBy: none
-		sourceColumn: longitude
-
 	/// Date of the customer's first order ever. Drives [New Customers].
 	column 'First Order Date'
 		dataType: dateTime
@@ -161,7 +147,7 @@ table Customer
 		source =
 				let
 				    Source = fnLoadTable("dim_customer"),
-				    Typed = Table.TransformColumnTypes(Source, {{"customer_key", Int64.Type}, {"customer_name", type text}, {"gender", type text}, {"age", Int64.Type}, {"age_band", type text}, {"age_band_sort", Int64.Type}, {"occupation", type text}, {"city", type text}, {"state_code", type text}, {"state_name", type text}, {"postal_code", type text}, {"country_code", type text}, {"country_name", type text}, {"continent", type text}, {"latitude", type number}, {"longitude", type number}, {"first_order_date", type date}, {"acquisition_cohort", type text}, {"has_purchased", type logical}})
+				    Typed = Table.TransformColumnTypes(Source, {{"customer_key", Int64.Type}, {"customer_name", type text}, {"gender", type text}, {"age", Int64.Type}, {"age_band", type text}, {"age_band_sort", Int64.Type}, {"occupation", type text}, {"city", type text}, {"state_code", type text}, {"state_name", type text}, {"postal_code", type text}, {"country_code", type text}, {"country_name", type text}, {"continent", type text}, {"first_order_date", type date}, {"acquisition_cohort", type text}, {"has_purchased", type logical}})
 				in
 				    Typed
 

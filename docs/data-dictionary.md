@@ -741,8 +741,6 @@ Customers (dbt mart dim_customer). Street-level PII is removed upstream.
 | Postal Code | string |  |
 | Country | string |  |
 | Continent | string |  |
-| Latitude | double |  |
-| Longitude | double |  |
 | First Order Date | dateTime | Date of the customer's first order ever. Drives [New Customers]. |
 | Acquisition Cohort | string | Year of first purchase ("No purchase" for prospects). Use for cohort analysis. |
 | Has Purchased | boolean |  |

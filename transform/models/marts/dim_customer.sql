@@ -45,8 +45,6 @@ select
     c.country_code,
     c.country_name,
     c.continent,
-    c.latitude,
-    c.longitude,
     f.first_order_date,
     coalesce(cast(year(f.first_order_date) as varchar), 'No purchase') as acquisition_cohort,
     f.first_order_date is not null                               as has_purchased

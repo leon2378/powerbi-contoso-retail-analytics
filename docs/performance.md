@@ -18,8 +18,8 @@ report behave at that scale, what the test found, and what changed as a result.
 | Download and extract (680 MB archive) | 101 s |
 | `dbt build`: 11 models, 2 seeds and 45 tests (43 data tests, 2 unit tests) | **27 s** |
 | Full refresh in Power BI Desktop (Home → Refresh) | **4 min 13 s** |
-| Model size in memory (VertiPaq) | **845 MB**: Sales 634 MB, Customer 193 MB, everything else 18 MB |
-| Largest columns | `Sales[Order Number]` 90 MB (plus its hierarchy), `Sales[Net Amount]` 90 MB, `Sales[Net Amount (Local)]` 90 MB, `Customer[Customer Name]` 57 MB |
+| Model size in memory (VertiPaq) | **742 MB** after the [size pass](#model-size-pass) (830 MB before it): Sales 555 MB, Customer 170 MB, everything else 18 MB |
+| Largest columns | `Sales[Order Number]`, `Sales[Net Amount]` and `Sales[Net Amount (Local)]` 90 MB each, `Customer[Customer Name]` 57 MB |
 
 ### Report queries
 
@@ -68,6 +68,34 @@ source failed at 10M: row counts and quantities matched exactly, but revenue dif
 $23.2bn. The source stores prices with 5 decimals and the mart rounds them to 4; the test summed the
 unrounded prices with a $1 tolerance, which 23.7M sub-cent roundings exceeded. It now rounds the source
 exactly like the mart and requires an exact match, which is stricter and holds at any scale.
+
+## Model size pass
+
+A second pass looked for memory the report doesn't use. Both sides were measured the same way: a full
+refresh in Desktop (`PerfKit refresh`), then `PerfKit vertipaq`. The first run above measured 845 MB; the
+same model and data measured 830 MB on the day of this pass, so that is the "before" here.
+
+| | Before | After |
+|---|---|---|
+| Model size in memory | 830 MB | **742 MB** (−87 MB, −10.5%) |
+| Sales | 619 MB | 555 MB |
+| Customer | 193 MB | 170 MB |
+| Full refresh | 304 s | 301 s |
+| Desktop's saved cache (`.pbi/cache.abf`) | 673 MB | 457 MB |
+
+1. **No attribute hierarchies on columns that are only summed, counted or filtered.** The engine builds a
+   hierarchy for every column at refresh, for MDX clients such as Excel PivotTables; DAX queries don't use
+   them. Eight Sales columns that no visual groups by (the four amounts, Quantity, Delivery Days, Line
+   Number and Order Number) now have `isAvailableInMdx: false`, which removed 64 MB of hierarchies.
+   Relationship keys and date columns keep theirs.
+2. **Customer coordinates dropped.** Latitude and longitude fed no visual (the report has no map) and are
+   precise personal location data, so staging now drops them along with the street address: 23 MB.
+
+21 report-style queries that touch every changed column, including a table grouped by Order Number,
+returned identical results before and after, and their cold and warm times didn't change (the cold
+medians of three runs add up to 9.6 s before and 9.5 s after). `Customer[Customer Name]` (57 MB) and
+`Sales[Net Amount (Local)]` (90 MB) aren't used by the report either, but they stay as attributes of the
+model: customer lookup and local-currency reporting.
 
 ## Reproduce
 

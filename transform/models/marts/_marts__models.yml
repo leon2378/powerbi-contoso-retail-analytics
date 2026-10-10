@@ -166,8 +166,6 @@ models:
       - { name: country_code, data_type: varchar }
       - { name: country_name, data_type: varchar }
       - { name: continent, data_type: varchar }
-      - { name: latitude, data_type: double }
-      - { name: longitude, data_type: double }
       - name: first_order_date
         data_type: date
         description: Date of the customer's first order ever. Drives "New Customers".

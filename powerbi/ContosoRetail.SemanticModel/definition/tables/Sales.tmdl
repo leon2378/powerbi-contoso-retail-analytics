@@ -22,6 +22,7 @@ table Sales
 	column 'Order Number'
 		dataType: int64
 		formatString: 0
+		isAvailableInMdx: false
 		lineageTag: 55c19e70-09c9-4dfe-8df6-01be1733a3ae
 		summarizeBy: none
 		sourceColumn: order_key
@@ -30,6 +31,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		isAvailableInMdx: false
 		lineageTag: feacb5ea-19cf-4be8-a68e-0504b379dbc8
 		summarizeBy: none
 		sourceColumn: line_number
@@ -90,6 +92,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: #,0
+		isAvailableInMdx: false
 		lineageTag: 9353b703-5425-41d8-bc38-972bb70dda6a
 		summarizeBy: sum
 		sourceColumn: quantity
@@ -98,6 +101,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		isAvailableInMdx: false
 		lineageTag: 2d641e89-f29f-49c9-b59e-5dfccf33c6e9
 		summarizeBy: sum
 		sourceColumn: gross_amount_usd
@@ -106,6 +110,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		isAvailableInMdx: false
 		lineageTag: cad57422-bc08-4cac-aa3f-cdfc273a99fb
 		summarizeBy: sum
 		sourceColumn: net_amount_usd
@@ -114,6 +119,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: \$#,0.00
+		isAvailableInMdx: false
 		lineageTag: 1f0dab95-2f82-4464-97c2-a0f897cd05e9
 		summarizeBy: sum
 		sourceColumn: cost_amount_usd
@@ -122,6 +128,7 @@ table Sales
 		dataType: decimal
 		isHidden
 		formatString: #,0.00
+		isAvailableInMdx: false
 		lineageTag: 839c780c-d566-4d5c-9176-89d8e4c43976
 		summarizeBy: sum
 		sourceColumn: net_amount_local
@@ -130,6 +137,7 @@ table Sales
 		dataType: int64
 		isHidden
 		formatString: 0
+		isAvailableInMdx: false
 		lineageTag: 41e16e2f-bf16-4fb8-88de-ad83feecb7c3
 		summarizeBy: none
 		sourceColumn: delivery_days

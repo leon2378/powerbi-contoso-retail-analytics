@@ -68,8 +68,9 @@ Measured on the 10M dataset; results and method in [performance.md](performance.
       six exceptions count distinct customers among 1.7M (1.1 to 1.8 s cold).
 - [x] No slicers on high-cardinality columns (customer name, order number). Use search or drill-through instead.
 - [x] Prefer measures over visual-level calculations. Avoid `FILTER(ALL(Sales), …)` patterns.
-- [x] Model size checked (`tools/PerfKit vertipaq`): 845 MB at 10M. `Sales[Order Number]` is the largest column (90 MB
-      plus its hierarchy); it is still needed for `[Orders]` under product filters.
+- [x] Model size checked (`tools/PerfKit vertipaq`): 742 MB at 10M, after removing the attribute hierarchies of
+      columns that are only aggregated and the unused customer coordinates. `Sales[Order Number]` is the largest
+      column (90 MB); it is still needed for `[Orders]` under product filters.
 
 ## Working with the project outside Desktop
 

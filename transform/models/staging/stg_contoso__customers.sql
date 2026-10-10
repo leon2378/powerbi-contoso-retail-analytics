@@ -1,6 +1,6 @@
 {#
-    Data minimisation: street address, title, company and vehicle are dropped here because no
-    report needs them. Names are synthetic, but the model is built as if they were real PII.
+    Data minimisation: street address, coordinates, title, company and vehicle are dropped here
+    because no report needs them. Names are synthetic, but the model is built as if they were real PII.
 #}
 with source as (
 
@@ -27,9 +27,7 @@ renamed as (
         trim(ZipCode)                                         as postal_code,
         upper(trim(Country))                                  as country_code,
         trim(CountryFull)                                     as country_name,
-        trim(Continent)                                       as continent,
-        cast(Latitude as double)                              as latitude,
-        cast(Longitude as double)                             as longitude
+        trim(Continent)                                       as continent
 
     from source
 

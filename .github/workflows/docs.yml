@@ -25,7 +25,7 @@ concurrency:
 jobs:
   build:
     name: Build dbt docs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       CONTOSO_RAW_DIR: data/raw
       CONTOSO_MARTS_DIR: data/marts
@@ -61,7 +61,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write # verifies the deployment comes from this workflow

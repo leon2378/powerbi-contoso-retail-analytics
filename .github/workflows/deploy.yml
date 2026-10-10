@@ -31,7 +31,7 @@ jobs:
 
   deploy:
     needs: ci
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.environment || 'DEV' }}
     concurrency:
       group: deploy-${{ inputs.environment || 'DEV' }}

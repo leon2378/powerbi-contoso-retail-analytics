@@ -113,7 +113,12 @@ Tasks:
         Invoke-Step "Lineage tags present" { & $Python scripts\add_lineage_tags.py --check }
         Invoke-Step "Data dictionary up to date" { & $Python scripts\generate_data_dictionary.py --check }
         Invoke-Step "Report checks (PBIR)" { & $Python scripts\validate_report.py }
-        Invoke-Step "TMDL validation" { dotnet run --project ci\TmdlValidator -- powerbi\ContosoRetail.SemanticModel\definition --bim build\model.bim }
+        if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+            Invoke-Step "TMDL validation" { dotnet run --project ci\TmdlValidator -- powerbi\ContosoRetail.SemanticModel\definition --bim build\model.bim }
+        }
+        else {
+            Write-Warning "TMDL validation skipped: it needs the .NET 8 SDK or later (CI always runs it)."
+        }
         Write-Host "All checks passed. (The Best Practice Analyzer runs in CI with Tabular Editor 2.)" -ForegroundColor Green
     }
 

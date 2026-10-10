@@ -153,17 +153,20 @@ class FabricClient:
         # Enhanced refresh: applies the incremental refresh policy and commits atomically.
         resp = self.request("POST", url, scope=POWERBI_SCOPE,
                             json={"type": "full", "commitMode": "transactional", "applyRefreshPolicy": True})
-        request_id = resp.headers.get("RequestId") or resp.headers.get("x-ms-request-id")
+        # Poll this refresh by its id (the Location header ends with it), not the newest entry in the
+        # refresh history, which can still be an earlier refresh right after the POST.
+        status_url = resp.headers.get("Location") or f"{url}/{resp.headers['x-ms-request-id']}"
         print(f"Refresh of '{name}' started")
         deadline = time.time() + timeout_s
         while time.time() < deadline:
             time.sleep(20)
-            latest = self.request("GET", f"{url}?$top=1", scope=POWERBI_SCOPE).json()["value"][0]
-            status = latest.get("status")
+            refresh = self.request("GET", status_url, scope=POWERBI_SCOPE).json()
+            status = refresh.get("status")
             if status == "Completed":
-                print(f"Refresh completed ({latest.get('startTime')} -> {latest.get('endTime')})")
+                print(f"Refresh completed ({refresh.get('startTime')} -> {refresh.get('endTime')})")
                 return
-            if status in ("Failed", "Cancelled", "Disabled"):
-                raise RuntimeError(f"Refresh {status}: {latest.get('serviceExceptionJson')} (request {request_id})")
+            if status in ("Failed", "Cancelled", "Disabled", "TimedOut"):
+                details = refresh.get("messages") or refresh.get("serviceExceptionJson")
+                raise RuntimeError(f"Refresh {status}: {details} ({status_url})")
             print(f"  refresh {status or 'in progress'}...")
         raise TimeoutError("Semantic model refresh did not finish in time")

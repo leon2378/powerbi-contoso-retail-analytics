@@ -1,8 +1,8 @@
 # Report design guide
 
 The report is 1280 × 720, built on a 16 px grid, with the **Contoso Executive** theme
-(`StaticResources/RegisteredResources/ContosoExecutive.json`). The first page, **Executive Overview**, is
-already built, and so are **Sales Performance**, **Customers**, **Products**, **Stores & Channels**, **Budget Variance**, the **Product detail** drill-through and the **Tooltip page**. The pages below are the plan for the rest of the report.
+(`StaticResources/RegisteredResources/ContosoExecutive.json`). Every page in the plan below is built: the six
+main pages, the **Product detail** drill-through and the **Tooltip page**.
 
 ## Page plan
 

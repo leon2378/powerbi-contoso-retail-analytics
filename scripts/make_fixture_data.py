@@ -29,6 +29,11 @@ COUNTRIES = {
     "DE": ("Germany", "Europe", "EUR", Decimal("0.91"), [("BY", "Bavaria"), ("BE", "Berlin")]),
     "GB": ("United Kingdom", "Europe", "GBP", Decimal("0.79"), [("ENG", "England"), ("SCT", "Scotland")]),
     "CA": ("Canada", "North America", "CAD", Decimal("1.36"), [("ON", "Ontario"), ("BC", "British Columbia")]),
+    # Every country in the rls_user_access seed has a store, as in the real release.
+    "AU": ("Australia", "Australia", "AUD", Decimal("1.52"), [("NSW", "New South Wales")]),
+    "FR": ("France", "Europe", "EUR", Decimal("0.91"), [("IDF", "Ile-de-France")]),
+    "IT": ("Italy", "Europe", "EUR", Decimal("0.91"), [("LAZ", "Lazio")]),
+    "NL": ("Netherlands", "Europe", "EUR", Decimal("0.91"), [("NH", "North Holland")]),
 }
 
 CATEGORIES = [

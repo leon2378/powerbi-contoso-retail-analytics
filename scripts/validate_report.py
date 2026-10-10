@@ -91,7 +91,8 @@ def field_references(node, found=None):
     if isinstance(node, dict):
         for kind in ("Column", "Measure", "Hierarchy"):
             ref = node.get(kind)
-            if isinstance(ref, dict) and "Property" in ref:
+            # A hierarchy reference names its target in "Hierarchy", not "Property".
+            if isinstance(ref, dict) and ("Property" in ref or "Hierarchy" in ref):
                 entity = ref.get("Expression", {}).get("SourceRef", {}).get("Entity")
                 if entity:
                     found.append((entity, ref.get("Property") or ref.get("Hierarchy")))

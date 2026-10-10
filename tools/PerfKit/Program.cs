@@ -14,6 +14,11 @@ using Microsoft.AnalysisServices.AdomdClient;
 using Tab = Microsoft.AnalysisServices.Tabular;
 using Amo = Microsoft.AnalysisServices;
 
+if (args.Length < 2)
+{
+    Console.Error.WriteLine("usage: PerfKit trace|replay|vertipaq|syncmeasures|refresh <port> [...] (see the top of Program.cs)");
+    Environment.Exit(2);
+}
 var cmd = args[0];
 var port = args[1];
 var cs = $"Data Source=localhost:{port}";
@@ -147,6 +152,11 @@ else if (cmd == "vertipaq")
             Console.WriteLine($"    {c.Key.Item2,-40} {c.Value / 1048576.0,10:N2} MB");
     }
     Console.WriteLine($"TOTAL {sizes.Values.Sum() / 1048576.0:N1} MB");
+}
+else
+{
+    Console.Error.WriteLine($"unknown command '{cmd}': use trace, replay, vertipaq, syncmeasures or refresh");
+    Environment.Exit(2);
 }
 
 static void Add<TK>(Dictionary<TK, long> d, TK k, long v) where TK : notnull => d[k] = d.GetValueOrDefault(k) + v;

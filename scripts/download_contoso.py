@@ -52,19 +52,18 @@ def stage(archive: Path, raw_dir: Path) -> None:
     with tempfile.TemporaryDirectory() as tmp:
         with py7zr.SevenZipFile(archive, mode="r") as z:
             z.extractall(path=tmp)
-        files = list(Path(tmp).rglob("*.parquet"))
-        if not files:
-            sys.exit(f"No .parquet files found in {archive.name}")
+        # Normalise names: the generator writes lower-case table names; be defensive anyway.
+        files = {f.name.lower(): f for f in Path(tmp).rglob("*.parquet")}
+        # Checked before raw_dir is cleared, so a bad archive leaves the current data in place.
+        missing = [t for t in REQUIRED_TABLES if f"{t}.parquet" not in files]
+        if missing:
+            sys.exit(f"{archive.name} is missing required tables: {missing}")
         if raw_dir.exists():
             shutil.rmtree(raw_dir)
         raw_dir.mkdir(parents=True)
-        for f in files:
-            # Normalise names: the generator writes lower-case table names; be defensive anyway.
-            shutil.move(str(f), raw_dir / f.name.lower())
+        for name, f in files.items():
+            shutil.move(str(f), raw_dir / name)
 
-    missing = [t for t in REQUIRED_TABLES if not (raw_dir / f"{t}.parquet").exists()]
-    if missing:
-        sys.exit(f"Archive is missing required tables: {missing}")
     for f in sorted(raw_dir.glob("*.parquet")):
         print(f"  {f.name:<24} {pq.ParquetFile(f).metadata.num_rows:>14,} rows")
 

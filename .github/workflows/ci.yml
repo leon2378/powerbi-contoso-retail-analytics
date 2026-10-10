@@ -16,7 +16,7 @@ concurrency:
 jobs:
   data:
     name: dbt build + contracts + report
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       CONTOSO_RAW_DIR: data/raw
       CONTOSO_MARTS_DIR: data/marts

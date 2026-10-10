@@ -48,14 +48,29 @@ Taken from a validated, colour-vision-deficiency-checked palette:
       $23.2 billion, margin 55.9%, …". `validate_report.py` fails CI when a visual has none or when typed alt text
       exceeds Power BI's 250 characters.
 - [x] Tab order follows reading order (*View → Selection → Tab order*), on the web and the mobile layout.
+      Power BI tabs from the highest `tabOrder` to the lowest, so the page title has the largest value.
       `validate_report.py` fails CI when a visual above, or to the left in the same row, comes later.
 - [x] Information is never carried by colour alone: legends on every multi-series chart, direct labels, + and −
       signs on every variance, and a one-colour scatter with labelled points.
 - [x] Text contrast ≥ 4.5:1. Ink `#0B0B0B` is 19.7:1 and `#52514E` 7.9:1 on white; dark text on the data-bar and
       heatmap tints is 9.3:1 or more. Data labels on orange bars are set to ink (6.2:1 inside the bar), because
       Power BI's automatic white label is only 3.2:1 there.
-- [ ] Keyboard-only walkthrough of every page, including slicers and drill-through (manual: *Ctrl+F6* to reach
-      the canvas, *Tab* between visuals, *Ctrl+Right arrow* into a visual, *Shift+F10* for drill-through).
+- [x] Keyboard-only walkthrough of every page, including slicers and drill-through, done in Power BI Desktop with
+      the focused element logged through UI Automation (what a screen reader announces):
+      - *Ctrl+F6* reaches the canvas on the page title, and the order follows the layout on all seven pages. Every
+        visual announces its title and alt text; the KPI rows read their live values.
+      - Dropdown slicers: *Ctrl+Right arrow* into the slicer, *Enter* opens the list, arrow keys and *Space* select,
+        and *Clear selections* is reachable with *Tab*. Metric buttons: arrow keys between tiles, *Enter* selects.
+      - Charts: *Ctrl+Right arrow*, then *Tab* between the plot area, axis and legend; inside the plot area every
+        data point reads out its values.
+      - Drill-through: in the Top 10 table, *Shift+F10* → *Drill through* → *Product Detail*. The back button comes
+        first on that page and returns with *Ctrl+Enter* (Desktop's Ctrl+click rule; plain *Enter* in the service).
+      - Pages: *Ctrl+F6* to the page tabs, then *Tab* or arrow keys and *Enter*.
+      - It caught the tab order running backwards on every page (see
+        [Tab order counts down](#working-with-the-project-outside-desktop)); fixed before the run above.
+      - Known limits, both in Desktop: *Tab* from a focused text box stops on Desktop's editing *More options*
+        button (*Shift+Tab* and *Ctrl+F6* still move on, and the text boxes have header icons off for readers),
+        and the category tooltip page only opens on hover, so keyboard users get the data point's values instead.
 - [x] Phone layouts (*View → Mobile layout*) for the six pages and Product Detail: one column with the filters on
       top, KPI cards in a two-column grid, then the charts. The wide tables and heatmaps (category matrix, cohort
       retention, top 10 products, store list, budget heatmap) are left out on phones. The tooltip page needs none.
@@ -92,6 +107,11 @@ These are lessons from building this report by editing TMDL/PBIR files directly:
   the `.pbip` without an account sees "sign in" instead of a map. The Bing-based Map and Filled map
   visuals are being retired (Desktop offers to upgrade them to Azure Maps). The Stores & Channels page
   shows geography as a country bar chart with a State drill-down level instead.
+- **Tab order counts down.** Power BI moves keyboard focus from the visual with the highest `tabOrder` to the
+  lowest, the opposite of what the numbers suggest. Moving the page title one place up in *View → Selection →
+  Tab order*, between neighbours at 3000 and 2000, made Desktop save it as 2500. The report first numbered its
+  visuals upwards in reading order, so keyboard users went through every page backwards until the keyboard
+  walkthrough caught it, and `validate_report.py` now checks the right direction.
 - **Report page tooltips.** A visual points at a tooltip page with `visualTooltip` → `show` + `section`
   (the page name), which is what Desktop writes. The `type` values are `Default` and `Canvas`; any other
   value is silently ignored and the plain tooltip shows instead. `validate_report.py` now checks

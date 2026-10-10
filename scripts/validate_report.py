@@ -206,6 +206,10 @@ def check_alt_text(visual_file: Path, visual: dict) -> None:
 def check_tab_order(where: Path, positions: dict[str, dict]) -> None:
     """Keyboard (tab) order must follow reading order: top to bottom, left to right.
 
+    Power BI moves focus from the HIGHEST tabOrder to the lowest. (Verified in Desktop: moving the
+    page title one place up in View > Selection > Tab order, between the values 3000 and 2000, made
+    Desktop save it as 2500.) So a visual that comes earlier in reading order needs the larger value.
+
     Two rules, checked for every pair of visuals: a visual that ends above another one starts must
     come first, and of two visuals whose top edges are within ROW_TOLERANCE px (one row), the left one
     comes first. Visuals that neither stack nor share a row (e.g. a tall panel beside two rows) can
@@ -216,9 +220,10 @@ def check_tab_order(where: Path, positions: dict[str, dict]) -> None:
         for b_name, b in items:
             above = a["y"] + a["height"] <= b["y"]
             left_in_row = abs(a["y"] - b["y"]) <= ROW_TOLERANCE and a["x"] < b["x"]
-            if (above or left_in_row) and a["tabOrder"] > b["tabOrder"]:
+            if (above or left_in_row) and a["tabOrder"] < b["tabOrder"]:
                 error(where, f"tab order: '{a_name}' ({'above' if above else 'left of'} '{b_name}') "
-                             f"should come before it but has tabOrder {a['tabOrder']} > {b['tabOrder']}")
+                             f"should come before it, so it needs the higher tabOrder, but has "
+                             f"{a['tabOrder']} < {b['tabOrder']}")
 
 
 def check_report(report_dir: Path) -> None:

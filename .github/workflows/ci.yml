@@ -31,6 +31,9 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Unit tests for the tooling (validators, model-source switch, Fabric helpers)
+        run: python -m pytest -q tests
+
       - name: Generate fixture data (same schema as the SQLBI release)
         run: |
           python scripts/make_fixture_data.py --out data/raw

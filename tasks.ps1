@@ -99,6 +99,7 @@ Tasks:
 
     "check" {
         Assert-Venv
+        Invoke-Step "Unit tests (tooling)" { & $Python -m pytest -q tests }
         # Isolated from your real data: CI-equivalent run on fixtures in data\ci.
         $env:CONTOSO_RAW_DIR = "data/ci/raw"; $env:CONTOSO_MARTS_DIR = "data/ci/marts"; $env:DUCKDB_PATH = "data/ci/ci.duckdb"
         try {

@@ -7,3 +7,4 @@ pyarrow>=21         # parquet I/O for fixtures and publishing
 jsonschema~=4.26    # PBIR / theme schema validation
 PyYAML~=6.0
 requests~=2.32
+pytest~=9.1         # unit tests for the scripts in tests/

@@ -109,6 +109,7 @@ Other tasks: `.\tasks.ps1 check` (everything CI runs), `docs` (dbt lineage site,
 ```
 ├── tasks.ps1                 task runner: setup, data, build, check, model-local/reset, deploy
 ├── scripts/                  ingest, publish, deploy and validation scripts (Python)
+├── tests/                    pytest unit tests for the scripts
 ├── transform/                dbt project
 │   ├── models/staging/       1:1 with source files: rename, cast, minimise PII
 │   ├── models/marts/         star schema + contracts, unit tests (exported to Parquet)
@@ -160,6 +161,7 @@ Key design decisions:
 | `validate_report.py` | PBIR files that violate Microsoft's JSON schemas, an invalid theme, visuals bound to fields that no longer exist, formatting values Power BI would silently ignore (visual, container and phone-layout settings, e.g. a tooltip type), visuals without alt text, tab order that doesn't follow the layout | CI, `check` |
 | `generate_data_dictionary.py --check` | documentation drifting from the model | CI, `check` |
 | Source-mode guard | the model committed in Fabric mode or with a machine-specific path | CI |
+| `pytest` (`tests/`) | bugs in the checks and scripts themselves: the tab-order direction, hierarchy references, formatting values, switching the model's source, lineage tags, contract parsing, the Fabric build and refresh polling, staging a download. Each script bug fixed so far has a test that fails without the fix | CI, `check` |
 
 The [report design guide](docs/report-design.md) has the page plan, colour system and checklists, and the [lessons](docs/report-design.md#working-with-the-project-outside-desktop) from building the report by editing TMDL and PBIR directly.
 
